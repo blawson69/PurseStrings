@@ -8,18 +8,18 @@ Contact:	https://app.roll20.net/users/1781274/ben-l
 
 var PurseStrings = PurseStrings || (function () {
     'use strict';
-    
+
     //---- INFO ----//
-    
+
     var version = '0.1.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
-    
+
 	logReadiness = function (msg) {
 		log('--> PurseStrings v' + version + ' <-- Initialized');
 	},
-	
+
     //----- INPUT HANDLER -----//
-    
+
     handleInput = function (msg) {
         if (msg.type == 'api' && msg.content.startsWith('!ps')) {
             var regex = /(\![^\ ]+) ([^\ ]+)(.+)*/igm;
@@ -46,7 +46,7 @@ var PurseStrings = PurseStrings || (function () {
 					} else {
 						sendChat('PurseStrings', '/w GM Invalid command!', null, {noarchive:true});
 					}
-                    
+
                 } else {
                     sendChat('PurseStrings', '/w GM You passed a parameter incorrectly. Use !ps --help', null, {noarchive:true});
                 }
@@ -55,14 +55,14 @@ var PurseStrings = PurseStrings || (function () {
             }
 		}
     },
-	
+
     commandSetup = function (msg) {
 		// Configure character sheet for each selected character
 		if (!msg.selected || !msg.selected.length) {
 			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
 			return;
 		}
-		
+
 		_.each(msg.selected, function(obj) {
 			var token = getObj(obj._type, obj._id);
 			if(token) {
@@ -70,7 +70,7 @@ var PurseStrings = PurseStrings || (function () {
 					var char_id = token.get('represents');
 					//sendChat('PurseStrings', '/w GM Character ID "' + char_id + '" selected.', null, {noarchive:true});
 					var character = getObj('character', token.get('represents'));
-					
+
 					if (!hasPurse(char_id)) {
 						_.each(attributes, function(attribute) {
 							var curAttr = createObj('attribute', {
@@ -79,9 +79,9 @@ var PurseStrings = PurseStrings || (function () {
 									current: '0'
 								});
 						});
-						
+
 						sendChat('PurseStrings', '/w GM PurseString attributes successfully added for ' + character.get('name') + '!', null, {noarchive:true});
-						
+
 						var coins = parseCoins(msg);
 						if (coins) {
 							commandAdd(msg);
@@ -93,13 +93,13 @@ var PurseStrings = PurseStrings || (function () {
 			}
 		});
 	},
-	
+
 	commandAdd = function (msg) {
 		if(!msg.selected || !msg.selected.length){
 			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
 			return;
 		}
-		
+
 		_.each(msg.selected, function(obj) {
 			var token = getObj(obj._type, obj._id);
 			if(token && token.get('represents') !== '') {
@@ -112,13 +112,13 @@ var PurseStrings = PurseStrings || (function () {
 			}
 		});
 	},
-	
+
 	commandSubt = function (msg) {
 		if(!msg.selected || !msg.selected.length){
 			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
 			return;
 		}
-		
+
 		_.each(msg.selected, function(obj) {
 			var token = getObj(obj._type, obj._id);
 			if(token && token.get('represents') !== '') {
@@ -133,7 +133,7 @@ var PurseStrings = PurseStrings || (function () {
 			}
 		});
 	},
-	
+
 	commandShow = function (msg) {
 		// Show one or more individual's current Purse contents
 		if(!msg.selected || !msg.selected.length){
@@ -146,24 +146,24 @@ var PurseStrings = PurseStrings || (function () {
 				if (token.get('represents') !== '') {
 					var character = getObj('character', token.get('represents'));
 					var purse = getPurse(character.get('id'));
-					var content = purse['cp'] + 'cp, ' + purse['sp'] + 'sp, ' + purse['ep'] + 'ep, ' + 
+					var content = purse['cp'] + 'cp, ' + purse['sp'] + 'sp, ' + purse['ep'] + 'ep, ' +
 					purse['gp'] + 'gp, and ' + purse['pp'] + 'pp.';
-					
+
 					// Count coins to determine total weight
 					var total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
 					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(2) + ' lbs.';
-					
+
 					showDialog('Purse Contents', character.get('name'), content, false);
 				}
 			}
 		});
 	},
-	
+
 	commandBuy = function (msg) {
 		var seller, buyer, commands = msg.content.split(/\s+/);
 		if (commands[2] && commands[2] !== '') buyer = getObj('character', commands[2]);
 		if (commands[3] && commands[3] !== '') seller = getObj('character', commands[3]);
-		
+
 		if (buyer && seller) {
 			if (hasPurse(seller.get('id'))) {
 				var purchased = changePurse(msg, buyer.get('id'), 'subt');
@@ -182,8 +182,8 @@ var PurseStrings = PurseStrings || (function () {
 			showDialog('Transaction Error', '', 'You must select a buyer and/or seller to do business!', false);
 		}
 	},
-	
-	parseCoins = function (msg) => {
+
+	parseCoins = function (msg) {
 		// Parses the input for the coin string and returns it as an array or null if error
 		var coins = null, tmpcoins = {cp:0,sp:0,ep:0,gp:0,pp:0},
 		regex = /[:]+/i,
@@ -215,16 +215,16 @@ var PurseStrings = PurseStrings || (function () {
 				}
 			});
 		}
-		
+
 		return coins;
     },
-	
+
 	hasPurse = function (charid) {
 		// Returns whether the provided character has been setup with the correct attributes
 		var result = true;
 		_.each(attributes, function(attribute) {
 			var curAttr = findObjs({
-				_type: 'attribute', 
+				_type: 'attribute',
 				characterid: charid,
 				name: attribute
 			}, {caseInsensitive: true})[0];
@@ -232,10 +232,10 @@ var PurseStrings = PurseStrings || (function () {
 				result = false;
 			}
 		});
-		
+
 		return result;
 	},
-	
+
 	getPurse = function (charid) {
 		// Returns an array holding the given character's Purse currency
 		var purse = [];
@@ -248,10 +248,10 @@ var PurseStrings = PurseStrings || (function () {
 		} else {
 			purse = null;
 		}
-		
+
 		return purse;
 	},
-	
+
 	changePurse = function (msg, charid, type='add') {
 		var result = true;
 		var character = getObj('character', charid);
@@ -259,13 +259,13 @@ var PurseStrings = PurseStrings || (function () {
 			var coins = parseCoins(msg);
 			if (coins) {
 				var purse = getPurse(character.get('id'));
-				
+
 				var cp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['cp'] })[0];
 				var sp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['sp'] })[0];
 				var ep = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['ep'] })[0];
 				var gp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['gp'] })[0];
 				var pp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['pp'] })[0];
-				
+
 				if (type == 'add') {
 					purse['cp'] += coins['cp'];
 					purse['sp'] += coins['sp'];
@@ -275,7 +275,7 @@ var PurseStrings = PurseStrings || (function () {
 				} else {
 					var coinsVal = coins['cp'] + (coins['sp'] * 10) + (coins['ep'] * 50) + (coins['gp'] * 100) + (coins['pp'] * 1000);
 					var purseVal = purse['cp'] + (purse['sp'] * 10) + (purse['ep'] * 50) + (purse['gp'] * 100) + (purse['pp'] * 1000);
-					
+
 					if (coinsVal > purseVal) {
 						result = false;
 					} else {
@@ -320,7 +320,7 @@ var PurseStrings = PurseStrings || (function () {
 						}
 					}
 				}
-				
+
 				cp.set('current', purse['cp']);
 				sp.set('current', purse['sp']);
 				ep.set('current', purse['ep']);
@@ -334,10 +334,10 @@ var PurseStrings = PurseStrings || (function () {
 			result = false;
 			sendChat('PurseStrings', '/w GM ' + character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup', null, {noarchive:true});
 		}
-		
+
 		return result;
 	},
-	
+
 	showDialog = function (title, name, content, whisper=true) {
 		// Outputs a 5e Shaped dialog box
 		var heading = '&{template:5e-shaped} '
@@ -350,13 +350,13 @@ var PurseStrings = PurseStrings || (function () {
 			sendChat('PurseStrings', heading + ' {{title=' + title + '}} {{show_character_name=1}} {{character_name=' + name + '}} {{content=' + content + '}}');
 		}
 	},
-	
+
     //---- PUBLIC FUNCTIONS ----//
-    
+
     registerEventHandlers = function () {
 		on('chat:message', handleInput);
 	};
-    
+
     return {
 		logReadiness: logReadiness,
 		registerEventHandlers: registerEventHandlers

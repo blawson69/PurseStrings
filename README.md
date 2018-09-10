@@ -1,11 +1,10 @@
 # PurseStrings
 
-This script handles currency and currency exchanges for characters using the 5e Shaped Sheet. It adds fields to each character which act as a "purse" for storing the requisite cp, sp, gp, ep, and pp, and will add/substract from them appropriately when collecting loot, paying for goods/services, etc.
+This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the 5e Shaped Sheet. It adds fields to each character which act as a "Purse" for storing the requisite cp, sp, gp, ep, and pp, and will add/substract from them appropriately when collecting loot, paying for goods/services, etc.
 
-### Coinage syntax
-Coinage can be sent as either a list of amount/demonimations (no commas) or as a shorthand list with a colon separating the amounts in denomination order with zeros for placeholders (no spaces).
+### Coinage
+Coinage can be sent as either a list of amounts & denominations (no commas), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest with zeros for placeholders (no spaces).
 
-**Examples**
 Both of the examples below represent 30cp and 4gp:
 * 30cp 4gp
 * 30:0:0:4:0
@@ -22,35 +21,37 @@ Both of the examples below represent 30cp and 4gp:
 * **--buy** <_buyer_> <_seller_> <_coinage_>
 
 ---
-You must setup player characters and NPCs before using PurseStrings. Currently, you must select the characters you want to setup and run the following command. This will add the necessary attributes to the character sheet:
+You must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This will add the necessary attributes to the character sheet(s):
 
 ```!ps --setup```
 
-If you wish to add a starting amount to the characters, you can optionally pass the coinage parameter along with the --setup command. Keep in mind the amount will be added to each character. The following adds 50cp, 20sp, and 10gp to each character you setup:
+If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the --setup command. Keep in mind the amount will be added to each selected character. The following adds 50cp, 20sp, and 10gp to each character you setup:
 
 ```!ps --setup 50:20:0:10:0```
 
 ---
 
-To add coinage to a character(s) purse, simply pass it with the --add parameter:
+To add coinage to a character(s) Purse, simply pass it with the --add parameter. The following adds 10gp to each selected character:
 
-```!ps --add 50:20:0:10:0```
-
----
-
-To remove coinage from a character(s) purse you use the --subt parameter along with the amount of coinage you wish to remove. If the amount of the coinage is more than what that character has in their purse, the operation will fail.
-
-```!ps --subt 50:20:0:10:0```
+```!ps --add 10gp```
 
 ---
 
-Characters can also exchange money. This can be either simple gifting of money or for the purchase of goods & services. PurseStrings doesn't care about inventory. It just handles the monetary transaction.
+To remove coinage from a character(s) Purse you use the --subt parameter along with the amount of coinage you wish to remove. If the amount of the coinage is more than what that character has in their Purse, the operation will fail. The following subtracts 10gp from each selected character:
 
-To exchange money, you use the --buy parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API works with selected tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
+```!ps --subt 10gp```
+
+Eqivalencies are used when determining what coins are removed. For instance, if the Purse has 50sp and 5 gp and the amount to subtract is 5gp, the Purse will contain 40sp and 0 gp once the subtraction is complete.
+
+---
+
+Characters can also exchange money. This can be either simple gifting of money between players or for the purchase of goods & services from a NPC. PurseStrings doesn't care about inventory, it just handles the monetary transaction.
+
+To exchange money, you use the --buy parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
 
 ```!ps --buy @{selected|character_id} @{target|character_id} 50gp```
 
-As with the --subt parameter, the transaction will fail if the amount of the coinage is more than what that character has in their purse.
+As with the --subt parameter, the transaction will fail if the amount of the coinage is more than what that character has in their Purse.
 
 ### Notes
 

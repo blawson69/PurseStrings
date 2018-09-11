@@ -391,28 +391,28 @@ var PurseStrings = PurseStrings || (function () {
 							if (purse['gp'] >= coins['gp']) {
 								purse['gp'] -= coins['gp'];
 							} else {
-								while (purse['gp'] < coins['gp'] && purse['pp'] >= 0) {
+								while (purse['gp'] < coins['gp'] && purse['pp'] > 0) {
 									purse['gp'] += 10;
 									purse['pp'] -= 1;
 								}
 								if (purse['gp'] >= coins['gp']) {
 									purse['gp'] -= coins['gp'];
 								} else {
-									while (purse['gp'] < coins['gp'] && purse['ep'] >= 2) {
+									while (purse['gp'] < coins['gp'] && purse['ep'] > 2) {
 										purse['gp'] += 1;
 										purse['ep'] -= 2;
 									}
 									if (purse['gp'] >= coins['gp']) {
 										purse['gp'] -= coins['gp'];
 									} else {
-										while (purse['gp'] < coins['gp'] && purse['sp'] >= 10) {
+										while (purse['gp'] < coins['gp'] && purse['sp'] > 10) {
 											purse['gp'] += 1;
 											purse['sp'] -= 10;
 										}
 										if (purse['gp'] >= coins['gp']) {
 											purse['gp'] -= coins['gp'];
 										} else {
-											while (purse['gp'] < coins['gp'] && purse['cp'] >= 100) {
+											while (purse['gp'] < coins['gp'] && purse['cp'] > 100) {
 												purse['gp'] += 1;
 												purse['cp'] -= 100;
 											}
@@ -433,28 +433,28 @@ var PurseStrings = PurseStrings || (function () {
 							if (purse['ep'] >= coins['ep']) {
 								purse['ep'] -= coins['ep'];
 							} else {
-								while (purse['ep'] < coins['ep'] && purse['gp'] >= 0) {
+								while (purse['ep'] < coins['ep'] && purse['gp'] > 0) {
 									purse['ep'] += 2;
 									purse['gp'] -= 1;
 								}
 								if (purse['ep'] >= coins['ep']) {
 									purse['ep'] -= coins['ep'];
 								} else {
-									while (purse['ep'] < coins['ep'] && purse['pp'] >= 0) {
+									while (purse['ep'] < coins['ep'] && purse['pp'] > 0) {
 										purse['ep'] += 20;
 										purse['pp'] -= 1;
 									}
 									if (purse['ep'] >= coins['ep']) {
 										purse['ep'] -= coins['ep'];
 									} else {
-										while (purse['ep'] < coins['ep'] && purse['sp'] >= 5) {
+										while (purse['ep'] < coins['ep'] && purse['sp'] > 5) {
 											purse['ep'] += 1;
 											purse['sp'] -= 5;
 										}
 										if (purse['ep'] >= coins['ep']) {
 											purse['ep'] -= coins['ep'];
 										} else {
-											while (purse['ep'] < coins['ep'] && purse['cp'] >= 50) {
+											while (purse['ep'] < coins['ep'] && purse['cp'] > 50) {
 												purse['ep'] += 1;
 												purse['cp'] -= 50;
 											}
@@ -475,28 +475,28 @@ var PurseStrings = PurseStrings || (function () {
 							if (purse['sp'] >= coins['sp']) {
 								purse['sp'] -= coins['sp'];
 							} else {
-								while (purse['sp'] < coins['sp'] && purse['ep'] >= 5) {
+								while (purse['sp'] < coins['sp'] && purse['ep'] > 5) {
 									purse['sp'] += 5;
 									purse['ep'] -= 1;
 								}
 								if (purse['sp'] >= coins['sp']) {
 									purse['sp'] -= coins['sp'];
 								} else {
-									while (purse['sp'] < coins['sp'] && purse['gp'] >= 0) {
+									while (purse['sp'] < coins['sp'] && purse['gp'] > 0) {
 										purse['sp'] += 10;
 										purse['gp'] -= 1;
 									}
 									if (purse['sp'] >= coins['sp']) {
 										purse['sp'] -= coins['sp'];
 									} else {
-										while (purse['sp'] < coins['sp'] && purse['pp'] >= 0) {
+										while (purse['sp'] < coins['sp'] && purse['pp'] > 0) {
 											purse['sp'] += 100;
 											purse['pp'] -= 1;
 										}
 										if (purse['sp'] >= coins['sp']) {
 											purse['sp'] -= coins['sp'];
 										} else {
-											while (purse['sp'] < coins['sp'] && purse['cp'] >= 10) {
+											while (purse['sp'] < coins['sp'] && purse['cp'] > 10) {
 												purse['sp'] += 1;
 												purse['cp'] -= 10;
 											}
@@ -517,28 +517,28 @@ var PurseStrings = PurseStrings || (function () {
 							if (purse['cp'] >= coins['cp']) {
 								purse['cp'] -= coins['cp'];
 							} else {
-								while (purse['cp'] < coins['cp'] && purse['sp'] >= 0) {
+								while (purse['cp'] < coins['cp'] && purse['sp'] > 0) {
 									purse['cp'] += 10;
 									purse['sp'] -= 1;
 								}
 								if (purse['cp'] >= coins['cp']) {
 									purse['cp'] -= coins['cp'];
 								} else {
-									while (purse['cp'] < coins['cp'] && purse['ep'] >= 0) {
+									while (purse['cp'] < coins['cp'] && purse['ep'] > 0) {
 										purse['cp'] += 50;
 										purse['ep'] -= 1;
 									}
 									if (purse['cp'] >= coins['cp']) {
 										purse['cp'] -= coins['cp'];
 									} else {
-										while (purse['cp'] < coins['cp'] && purse['gp'] >= 0) {
+										while (purse['cp'] < coins['cp'] && purse['gp'] > 0) {
 											purse['cp'] += 100;
 											purse['gp'] -= 1;
 										}
 										if (purse['cp'] >= coins['cp']) {
 											purse['cp'] -= coins['cp'];
 										} else {
-											while (purse['cp'] < coins['cp'] && purse['pp'] >= 0) {
+											while (purse['cp'] < coins['cp'] && purse['pp'] > 0) {
 												purse['cp'] += 1000;
 												purse['pp'] -= 1;
 											}

@@ -13,6 +13,7 @@ var PurseStrings = PurseStrings || (function () {
 
     var version = '0.1.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
+		dropChange = false,
 
 	logReadiness = function (msg) {
 		log('--> PurseStrings v' + version + ' <-- Initialized');
@@ -43,6 +44,12 @@ var PurseStrings = PurseStrings || (function () {
 						commandShow(msg);
 					} else if (command[2] == '--buy' && command[3]) {
 						commandBuy(msg);
+                    } else if (command[2] == '--dist' && command[3]) {
+                        if (playerIsGM(msg.playerid)) {
+                            commandDist(msg);
+                        } else {
+                            sendChat('PurseStrings', '/w GM Only the GM can access PurseStrings this command!', null, {noarchive:true});
+                        }
 					} else {
 						sendChat('PurseStrings', '/w GM Invalid command!', null, {noarchive:true});
 					}
@@ -82,7 +89,7 @@ var PurseStrings = PurseStrings || (function () {
 
 						sendChat('PurseStrings', '/w GM PurseString attributes successfully added for ' + character.get('name') + '!', null, {noarchive:true});
 
-						var coins = parseCoins(msg);
+						var coins = parseCoins(msg.content);
 						if (coins) {
 							commandAdd(msg);
 						}
@@ -104,7 +111,7 @@ var PurseStrings = PurseStrings || (function () {
 			var token = getObj(obj._type, obj._id);
 			if(token && token.get('represents') !== '') {
 				var character = getObj('character', token.get('represents'));
-				var changed = changePurse(msg, token.get('represents'), 'add');
+				var changed = changePurse(msg.content, token.get('represents'), 'add');
 				if (changed) {
 					showDialog('Purse Updated', character.get('name'), 'Coins added successfully.', false);
 					commandShow(msg);
@@ -123,7 +130,7 @@ var PurseStrings = PurseStrings || (function () {
 			var token = getObj(obj._type, obj._id);
 			if(token && token.get('represents') !== '') {
 				var character = getObj('character', token.get('represents'));
-				var changed = changePurse(msg, token.get('represents'), 'subt');
+				var changed = changePurse(msg.content, token.get('represents'), 'subt');
 				if (changed) {
 					showDialog('Purse Updated', character.get('name'), 'Coins subtracted successfully.', false);
 					commandShow(msg);
@@ -166,9 +173,9 @@ var PurseStrings = PurseStrings || (function () {
 
 		if (buyer && seller) {
 			if (hasPurse(seller.get('id'))) {
-				var purchased = changePurse(msg, buyer.get('id'), 'subt');
+				var purchased = changePurse(msg.content, buyer.get('id'), 'subt');
 				if (purchased) {
-					var sold = changePurse(msg, seller.get('id'), 'add');
+					var sold = changePurse(msg.content, seller.get('id'), 'add');
 					if (sold) {
 						showDialog('Purse Updated', buyer.get('name'), 'Your purchase from ' + seller.get('name') + ' is successful!', false);
 					}
@@ -183,12 +190,72 @@ var PurseStrings = PurseStrings || (function () {
 		}
 	},
 
-	parseCoins = function (msg) {
+    commandDist = function (msg) {
+		// Distribute loot between selected characters
+		if(!msg.selected || !msg.selected.length){
+			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
+			return;
+		}
+		
+		var loot = parseCoins(msg.content), comments = '', recipients = [];
+		if (loot) {
+			var numParty = msg.selected.length, tmpcoins = [], xtracoins = [], splits, lefties, rando;
+			
+			xtracoins['cp'] = (loot['cp'] % numParty);
+			xtracoins['sp'] = (loot['sp'] % numParty);
+			xtracoins['ep'] = (loot['ep'] % numParty);
+			xtracoins['gp'] = (loot['gp'] % numParty);
+			xtracoins['pp'] = (loot['pp'] % numParty);
+			
+			tmpcoins['cp'] = parseInt(loot['cp'] / numParty);
+			tmpcoins['sp'] = parseInt(loot['sp'] / numParty);
+			tmpcoins['ep'] = parseInt(loot['ep'] / numParty);
+			tmpcoins['gp'] = parseInt(loot['gp'] / numParty);
+			tmpcoins['pp'] = parseInt(loot['pp'] / numParty);
+			
+			splits = _.values(tmpcoins);
+			lefties = _.values(xtracoins);
+			rando = Math.floor(Math.random() * numParty);
+
+			_.each(msg.selected, function(obj) {
+				var token = getObj(obj._type, obj._id);
+				if(token && token.get('represents') !== '') {
+					var character = getObj('character', token.get('represents'));
+					var changed = changePurse(splits.join(':'), token.get('represents'), 'add');
+					if (changed) {
+						recipients.push(character.get('name'));
+					}
+				}
+			});
+			
+			if (dropChange) {
+				comments = xtracoins['cp'] + 'cp, ' + xtracoins['sp'] + 'sp, ' + xtracoins['ep'] + 'ep, ' +
+				xtracoins['gp'] + 'gp, and ' + xtracoins['pp'] + 'pp has been left over from even distribution.';
+			} else {
+				var lucky = msg.selected[rando];
+				if (lucky) {
+					var token = getObj(lucky._type, lucky._id);
+					if (token && token.get('represents') !== '') {
+						var character = getObj('character', token.get('represents'));
+						var changed = changePurse(lefties.join(':'), token.get('represents'), 'add');
+						if (changed) {
+							comments = character.get('name') + ' recieved the leftover loot.';
+						}
+					}
+				}
+			}
+			showDialog('Distribution Successful', '', 'Loot has been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>' + comments, false);
+		} else {
+			sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
+		}
+    },
+
+	parseCoins = function (cmds) {
 		// Parses the input for the coin string and returns it as an array or null if error
 		var coins = null, tmpcoins = {cp:0,sp:0,ep:0,gp:0,pp:0},
 		regex = /[:]+/i,
-		commands = msg.content.split(/\s+/);
-		if (regex.test(msg.content)) {
+		commands = cmds.toString().split(/\s+/);
+		if (regex.test(cmds)) {
 			// Coins sent as cp:sp:ep:gp:pp
 			_.each(commands, function (cmd) {
 				if (regex.test(cmd)) {
@@ -252,11 +319,12 @@ var PurseStrings = PurseStrings || (function () {
 		return purse;
 	},
 
-	changePurse = function (msg, charid, type='add') {
+	changePurse = function (pockets, charid, type='add') {
+		// Add or subtract from a character's Purse
 		var result = true;
 		var character = getObj('character', charid);
 		if (hasPurse(character.get('id'))) {
-			var coins = parseCoins(msg);
+			var coins = parseCoins(pockets);
 			if (coins) {
 				var purse = getPurse(character.get('id'));
 

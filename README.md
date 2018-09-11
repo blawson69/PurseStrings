@@ -17,11 +17,12 @@ Both of the examples below represent 30cp and 4gp:
 * **--setup**
 * **--show**
 * **--add** <_coinage_>
+* **--dist** <_coinage_>
 * **--subt** <_coinage_>
 * **--buy** <_buyer_> <_seller_> <_coinage_>
 
 ---
-You must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This will add the necessary attributes to the character sheet(s):
+The GM must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This will add the necessary attributes to the character sheet(s):
 
 ```!ps --setup```
 
@@ -34,6 +35,14 @@ If you wish to add a starting amount to the selected characters, you can optiona
 To add coinage to a character(s) Purse, simply pass it with the --add parameter. The following adds 10gp to each selected character:
 
 ```!ps --add 10gp```
+
+---
+
+When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly amongst the party. All party members must be selected to run the command:
+
+```!ps --dist 156:280:0:666:0```
+
+The leftover coinage that remains when it cannot be evenly divided can either be dropped so the players can decide who should recieve the remainder, or given to a randomly selected member of the group. To configure this there is a ```dropChange``` variable at the beginning which toggles this behavior on or off. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random character.
 
 ---
 

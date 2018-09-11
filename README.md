@@ -22,31 +22,37 @@ Both of the examples below represent 30cp and 4gp:
 * **--buy** <_buyer_id_> <_seller_id_> <_coinage_>
 
 ---
-The GM must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This will add the necessary attributes to the character sheet(s):
+**GM Only** The GM must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This will add the necessary attributes to the character sheet(s):
 
 ```!ps --setup```
 
-If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the --setup command. Keep in mind the given amount will be added to each selected character. The following adds 50cp, 20sp, and 10gp to each character you setup:
+If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to each selected character. The following adds 50cp, 20sp, and 10gp to each character selected:
 
 ```!ps --setup 50:20:0:10:0```
 
 ---
 
-To add coinage to a character(s) Purse, simply pass it with the --add parameter. The following adds 10gp to each selected character:
+To display the contents of a character's Purse, use the `--show` parameter. It will display Purse contents for all selected tokens, and shows the total weight of all coins for encumbrance purposes:
+
+```!ps --show```
+
+---
+
+**GM Only** To add coinage to a character(s) Purse, simply pass it with the `--add` parameter. The following adds 10gp to each selected character:
 
 ```!ps --add 10gp```
 
 ---
 
-When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly amongst the party. All party members who should receive a share of the loot must be selected to run the command:
+**GM Only** When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly amongst the party. All party members who should receive a share of the loot must be selected to run the command:
 
 ```!ps --dist 156:280:0:666:0```
 
-The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a ```dropChange``` variable at the beginning of the script which toggles this behavior on or off. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random character.
+The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a `dropChange` variable at the beginning of the script which toggles this behavior on or off. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random character.
 
 ---
 
-To remove coinage from a character(s) Purse you use the --subt parameter along with the amount of coinage you wish to remove. If the amount of the coinage is more than what that character has in their Purse, the operation will fail. The following subtracts 10gp from each selected character:
+**GM Only** To simply remove coinage from a character(s) Purse (without giving it to another character) you use the `--subt` parameter along with the amount of coinage you wish to remove. If the amount of the coinage is more than what that character has in their Purse, the operation will fail. The following subtracts 10gp from each selected character:
 
 ```!ps --subt 10gp```
 
@@ -54,13 +60,13 @@ Equivalencies are used when determining what coins are removed. For instance, if
 
 ---
 
-Characters can also exchange money. This can be either simple gifting of money between players or for the purchase of goods & services from a NPC. PurseStrings doesn't care about inventory, it just handles the monetary transaction.
+Characters can also exchange money. This can be either the purchase of goods & services from a NPC or simply giving money to another player. PurseStrings doesn't care about inventory, it just handles the monetary transaction.
 
-To exchange money, you use the --buy parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
+To exchange money, you use the `--buy` parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
 
 ```!ps --buy @{selected|character_id} @{target|character_id} 50gp```
 
-As with the --subt parameter, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse.
+As with the `--subt` parameter, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse, and equivalencies will be used for making change.
 
 ### Notes
 

@@ -23,43 +23,47 @@ var PurseStrings = PurseStrings || (function () {
 
     handleInput = function (msg) {
         if (msg.type == 'api' && msg.content.startsWith('!ps')) {
-            var regex = /(\![^\ ]+) ([^\ ]+)(.+)*/igm;
-            var command = regex.exec(msg.content);
-            if (command[3]){
-                command[3] = command[3].trim();
-            }
-            if (command && command[2]){
-                if (command[2].startsWith("--")) {
-                    if (command[2] == '--setup') {
-                        if (playerIsGM(msg.playerid)) {
-                            commandSetup(msg);
-                        } else {
-                            sendChat('PurseStrings', '/w GM Only the GM can access PurseStrings configuration commands!', null, {noarchive:true});
-                        }
-                    } else if (command[2] == '--add' && command[3]) {
-						commandAdd(msg);
-					} else if (command[2] == '--subt' && command[3]) {
-						commandSubt(msg);
-					} else if (command[2] == '--show') {
-						commandShow(msg);
-					} else if (command[2] == '--buy' && command[3]) {
+			var parms = msg.content.split(/\s+/i);			
+			if (parms[1]) {
+				switch (parms[1]) {
+					case '--setup':
+						if (playerIsGM(msg.playerid)) {
+							commandSetup(msg);
+						} else {
+							sendChat('PurseStrings', 'Only the GM can access the --setup command', null, {noarchive:true});
+						}
+						break;
+					case '--add':
+						if (playerIsGM(msg.playerid)) {
+							commandAdd(msg);
+						} else {
+							sendChat('PurseStrings', 'Only the GM can access the --add command', null, {noarchive:true});
+						}
+						break;
+					case '--dist':
+						if (playerIsGM(msg.playerid)) {
+							commandDist(msg);
+						} else {
+							sendChat('PurseStrings', 'Only the GM can access the --dist command', null, {noarchive:true});
+						}
+						break;
+					case '--subt':
+						if (playerIsGM(msg.playerid)) {
+							commandSubt(msg);
+						} else {
+							sendChat('PurseStrings', 'Only the GM can access the --subt command', null, {noarchive:true});
+						}
+						break;
+					case '--buy':
 						commandBuy(msg);
-                    } else if (command[2] == '--dist' && command[3]) {
-                        if (playerIsGM(msg.playerid)) {
-                            commandDist(msg);
-                        } else {
-                            sendChat('PurseStrings', '/w GM Only the GM can access PurseStrings this command!', null, {noarchive:true});
-                        }
-					} else {
-						sendChat('PurseStrings', '/w GM Invalid command!', null, {noarchive:true});
-					}
-
-                } else {
-                    sendChat('PurseStrings', '/w GM You passed a parameter incorrectly. Use !ps --help', null, {noarchive:true});
-                }
-            } else {
-                sendChat('PurseStrings', '/w GM You called !ps without any parameters. Use !ps --help', null, {noarchive:true});
-            }
+						break;
+					case '--show':
+						commandShow(msg);
+						break;
+				}
+			} else {
+				sendChat('PurseStrings', 'You called !ps without any parameters. Try again.', null, {noarchive:true});
+			}
 		}
     },
 
@@ -113,7 +117,7 @@ var PurseStrings = PurseStrings || (function () {
 				var character = getObj('character', token.get('represents'));
 				var changed = changePurse(msg.content, token.get('represents'), 'add');
 				if (changed) {
-					showDialog('Purse Updated', character.get('name'), 'Coins added successfully.', false);
+					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.', false);
 					commandShow(msg);
 				}
 			}
@@ -132,7 +136,7 @@ var PurseStrings = PurseStrings || (function () {
 				var character = getObj('character', token.get('represents'));
 				var changed = changePurse(msg.content, token.get('represents'), 'subt');
 				if (changed) {
-					showDialog('Purse Updated', character.get('name'), 'Coins subtracted successfully.', false);
+					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.', false);
 					commandShow(msg);
 				} else {
 					showDialog('Transaction Error', character.get('name'), 'You don\'t have enough money for that operation!', false);
@@ -150,11 +154,10 @@ var PurseStrings = PurseStrings || (function () {
 		_.each(msg.selected, function(obj) {
 			var token = getObj(obj._type, obj._id);
 			if(token) {
-				if (token.get('represents') !== '') {
+				if (token.get('represents') !== '' && hasPurse(token.get('represents'))) {
 					var character = getObj('character', token.get('represents'));
 					var purse = getPurse(character.get('id'));
-					var content = purse['cp'] + 'cp, ' + purse['sp'] + 'sp, ' + purse['ep'] + 'ep, ' +
-					purse['gp'] + 'gp, and ' + purse['pp'] + 'pp.';
+					var content = prettyCoins(purse, false) + '.';
 
 					// Count coins to determine total weight
 					var total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
@@ -177,7 +180,7 @@ var PurseStrings = PurseStrings || (function () {
 				if (purchased) {
 					var sold = changePurse(msg.content, seller.get('id'), 'add');
 					if (sold) {
-						showDialog('Purse Updated', buyer.get('name'), 'Your purchase from ' + seller.get('name') + ' is successful!', false);
+						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + prettyCoins(parseCoins(msg.content), true) + ' to ' + seller.get('name') + '.', false);
 					}
 				} else {
 					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', false);
@@ -593,7 +596,7 @@ var PurseStrings = PurseStrings || (function () {
 	},
 	
 	prettyCoins = function (coins, dropZero=false) {
-		// Return a string of coins from a coin array for dialog
+		// Return a pretty (grammatically speaking) string of coins from a coin array for dialog
 		var result = '', joiner = ' ', tmpres = [];
 		if (coins['cp'] > 0 || !dropZero) tmpres.push(coins['cp'] + 'cp');
 		if (coins['sp'] > 0 || !dropZero) tmpres.push(coins['sp'] + 'sp');

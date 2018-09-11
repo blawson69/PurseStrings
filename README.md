@@ -44,11 +44,11 @@ To display the contents of a character's Purse, use the `--show` parameter. It w
 
 ---
 
-**GM Only** When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly amongst the party. All party members who should receive a share of the loot must be selected to run the command:
+**GM Only** When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly amongst the party. Tokens for all party members who should receive a share of the loot must be selected when running the command:
 
 ```!ps --dist 156:280:0:666:0```
 
-The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a `dropChange` variable at the beginning of the script which toggles this behavior on or off. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random character.
+The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a `dropChange` variable at the beginning of the script which toggles this behavior on or off. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random party member. This recipient will be selected only from the selected tokens.
 
 ---
 
@@ -70,4 +70,4 @@ As with the `--subt` parameter, the transaction will fail if the amount of the c
 
 ### Notes
 
-PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well. It also assumes the use of the standard SRD monetary system. It also does not interact with the coinage visible in the character sheet. In fact, the lack of access to those values is the sole purpose of this script. As such, any amounts entered in those fields will be ignored.
+PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well. It also assumes the use of the standard SRD monetary system. Be aware the script does not interact with the coinage visible in the character sheet. In fact, the lack of access to those values is the sole purpose of this script. As such, any amounts entered in those fields will be ignored.

@@ -250,7 +250,7 @@ var PurseStrings = PurseStrings || (function () {
 					sendChat('PurseStrings', '/w GM Could not add leftovers to ' + character.get('name'), null, {noarchive:true});
 				}
 			}
-			showDialog('Distribution Successful', '', 'Loot has been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, false);
+			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, false);
 		} else {
 			sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
 		}

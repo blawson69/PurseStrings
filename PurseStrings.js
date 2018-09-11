@@ -199,7 +199,14 @@ var PurseStrings = PurseStrings || (function () {
 		
 		var loot = parseCoins(msg.content), comments = '', recipients = [];
 		if (loot) {
-			var numParty = msg.selected.length, tmpcoins = [], xtracoins = [], splits, lefties, rando;
+			var numParty, partyMembers = [], tmpcoins = [], xtracoins = [], splits, lefties, rando;
+			_.each(msg.selected, function(obj) {
+				var selected = getObj(obj._type, obj._id);
+				if(selected && selected.get('represents') !== '') {
+					partyMembers.push(selected.get('represents'));
+				}
+			});
+			numParty = partyMembers.length;
 			
 			xtracoins['cp'] = (loot['cp'] % numParty);
 			xtracoins['sp'] = (loot['sp'] % numParty);
@@ -229,22 +236,18 @@ var PurseStrings = PurseStrings || (function () {
 			});
 			
 			if (dropChange) {
-				comments = xtracoins['cp'] + 'cp, ' + xtracoins['sp'] + 'sp, ' + xtracoins['ep'] + 'ep, ' +
-				xtracoins['gp'] + 'gp, and ' + xtracoins['pp'] + 'pp has been left over from even distribution.';
+				comments = '<br>' + prettyCoins(xtracoins, true) + ' have been left over from even distribution.'
 			} else {
-				var lucky = msg.selected[rando];
-				if (lucky) {
-					var token = getObj(lucky._type, lucky._id);
-					if (token && token.get('represents') !== '') {
-						var character = getObj('character', token.get('represents'));
-						var changed = changePurse(lefties.join(':'), token.get('represents'), 'add');
-						if (changed) {
-							comments = character.get('name') + ' recieved the leftover loot.';
-						}
-					}
+				var lucky = partyMembers[rando];
+				var character = getObj('character', lucky);
+				var changed = changePurse(lefties.join(':'), lucky, 'add');
+				if (changed) {
+					comments = '<br>' + character.get('name') + ' recieved ' + prettyCoins(xtracoins, true) + ' of leftover loot.';
+				} else {
+					sendChat('PurseStrings', '/w GM Could not add leftovers to ' + character.get('name'), null, {noarchive:true});
 				}
 			}
-			showDialog('Distribution Successful', '', 'Loot has been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>' + comments, false);
+			showDialog('Distribution Successful', '', 'Loot has been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, false);
 		} else {
 			sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
 		}
@@ -328,12 +331,6 @@ var PurseStrings = PurseStrings || (function () {
 			if (coins) {
 				var purse = getPurse(character.get('id'));
 
-				var cp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['cp'] })[0];
-				var sp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['sp'] })[0];
-				var ep = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['ep'] })[0];
-				var gp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['gp'] })[0];
-				var pp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['pp'] })[0];
-
 				if (type == 'add') {
 					purse['cp'] += coins['cp'];
 					purse['sp'] += coins['sp'];
@@ -347,47 +344,223 @@ var PurseStrings = PurseStrings || (function () {
 					if (coinsVal > purseVal) {
 						result = false;
 					} else {
+						// platinum pieces
 						if (coins['pp'] > 0) {
 							if (purse['pp'] >= coins['pp']) {
 								purse['pp'] -= coins['pp'];
 							} else {
-								coins['pp'] -= purse['pp'];
-								purse['pp'] = 0;
-								coins['gp'] = coins['pp'] * 10;
+								while (purse['pp'] < coins['pp'] && purse['gp'] >= 10) {
+									purse['pp'] += 1;
+									purse['gp'] -= 10;
+								}
+								if (purse['pp'] >= coins['pp']) {
+									purse['pp'] -= coins['pp'];
+								} else {
+									while (purse['pp'] < coins['pp'] && purse['ep'] >= 20) {
+										purse['pp'] += 1;
+										purse['ep'] -= 20;
+									}
+									if (purse['pp'] >= coins['pp']) {
+										purse['pp'] -= coins['pp'];
+									} else {
+										while (purse['pp'] < coins['pp'] && purse['sp'] >= 100) {
+											purse['pp'] += 1;
+											purse['sp'] -= 100;
+										}
+										if (purse['pp'] >= coins['pp']) {
+											purse['pp'] -= coins['pp'];
+										} else {
+											while (purse['pp'] < coins['pp'] && purse['cp'] >= 1000) {
+												purse['pp'] += 1;
+												purse['cp'] -= 1000;
+											}
+											if (purse['pp'] >= coins['pp']) {
+												purse['pp'] -= coins['pp'];
+											} else {
+												result = false;
+												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['pp'] + 'pp?', null, {noarchive:true});
+											}
+										}
+									}
+								}
 							}
 						}
+						
+						// gold pieces
 						if (coins['gp'] > 0) {
 							if (purse['gp'] >= coins['gp']) {
 								purse['gp'] -= coins['gp'];
 							} else {
-								coins['gp'] -= purse['gp'];
-								purse['gp'] = 0;
-								coins['ep'] = coins['gp'] * 2;
+								while (purse['gp'] < coins['gp'] && purse['pp'] >= 0) {
+									purse['gp'] += 10;
+									purse['pp'] -= 1;
+								}
+								if (purse['gp'] >= coins['gp']) {
+									purse['gp'] -= coins['gp'];
+								} else {
+									while (purse['gp'] < coins['gp'] && purse['ep'] >= 2) {
+										purse['gp'] += 1;
+										purse['ep'] -= 2;
+									}
+									if (purse['gp'] >= coins['gp']) {
+										purse['gp'] -= coins['gp'];
+									} else {
+										while (purse['gp'] < coins['gp'] && purse['sp'] >= 10) {
+											purse['gp'] += 1;
+											purse['sp'] -= 10;
+										}
+										if (purse['gp'] >= coins['gp']) {
+											purse['gp'] -= coins['gp'];
+										} else {
+											while (purse['gp'] < coins['gp'] && purse['cp'] >= 100) {
+												purse['gp'] += 1;
+												purse['cp'] -= 100;
+											}
+											if (purse['gp'] >= coins['gp']) {
+												purse['gp'] -= coins['gp'];
+											} else {
+												result = false;
+												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['gp'] + 'gp?', null, {noarchive:true});
+											}
+										}
+									}
+								}
 							}
 						}
+						
+						// electrum pieces
 						if (coins['ep'] > 0) {
 							if (purse['ep'] >= coins['ep']) {
 								purse['ep'] -= coins['ep'];
 							} else {
-								coins['ep'] -= purse['ep'];
-								purse['ep'] = 0;
-								coins['sp'] = coins['ep'] * 5;
+								while (purse['ep'] < coins['ep'] && purse['gp'] >= 0) {
+									purse['ep'] += 2;
+									purse['gp'] -= 1;
+								}
+								if (purse['ep'] >= coins['ep']) {
+									purse['ep'] -= coins['ep'];
+								} else {
+									while (purse['ep'] < coins['ep'] && purse['pp'] >= 0) {
+										purse['ep'] += 20;
+										purse['pp'] -= 1;
+									}
+									if (purse['ep'] >= coins['ep']) {
+										purse['ep'] -= coins['ep'];
+									} else {
+										while (purse['ep'] < coins['ep'] && purse['sp'] >= 5) {
+											purse['ep'] += 1;
+											purse['sp'] -= 5;
+										}
+										if (purse['ep'] >= coins['ep']) {
+											purse['ep'] -= coins['ep'];
+										} else {
+											while (purse['ep'] < coins['ep'] && purse['cp'] >= 50) {
+												purse['ep'] += 1;
+												purse['cp'] -= 50;
+											}
+											if (purse['ep'] >= coins['ep']) {
+												purse['ep'] -= coins['ep'];
+											} else {
+												result = false;
+												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['ep'] + 'ep?', null, {noarchive:true});
+											}
+										}
+									}
+								}
 							}
 						}
+						
+						// silver pieces
 						if (coins['sp'] > 0) {
 							if (purse['sp'] >= coins['sp']) {
 								purse['sp'] -= coins['sp'];
 							} else {
-								coins['sp'] -= purse['sp'];
-								purse['sp'] = 0;
-								coins['cp'] = coins['sp'] * 10;
+								while (purse['sp'] < coins['sp'] && purse['ep'] >= 5) {
+									purse['sp'] += 5;
+									purse['ep'] -= 1;
+								}
+								if (purse['sp'] >= coins['sp']) {
+									purse['sp'] -= coins['sp'];
+								} else {
+									while (purse['sp'] < coins['sp'] && purse['gp'] >= 0) {
+										purse['sp'] += 10;
+										purse['gp'] -= 1;
+									}
+									if (purse['sp'] >= coins['sp']) {
+										purse['sp'] -= coins['sp'];
+									} else {
+										while (purse['sp'] < coins['sp'] && purse['pp'] >= 0) {
+											purse['sp'] += 100;
+											purse['pp'] -= 1;
+										}
+										if (purse['sp'] >= coins['sp']) {
+											purse['sp'] -= coins['sp'];
+										} else {
+											while (purse['sp'] < coins['sp'] && purse['cp'] >= 10) {
+												purse['sp'] += 1;
+												purse['cp'] -= 10;
+											}
+											if (purse['sp'] >= coins['sp']) {
+												purse['sp'] -= coins['sp'];
+											} else {
+												result = false;
+												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['sp'] + 'sp?', null, {noarchive:true});
+											}
+										}
+									}
+								}
 							}
 						}
+						
+						// copper pieces
 						if (coins['cp'] > 0) {
-							purse['cp'] -= coins['cp'];
+							if (purse['cp'] >= coins['cp']) {
+								purse['cp'] -= coins['cp'];
+							} else {
+								while (purse['cp'] < coins['cp'] && purse['sp'] >= 0) {
+									purse['cp'] += 10;
+									purse['sp'] -= 1;
+								}
+								if (purse['cp'] >= coins['cp']) {
+									purse['cp'] -= coins['cp'];
+								} else {
+									while (purse['cp'] < coins['cp'] && purse['ep'] >= 0) {
+										purse['cp'] += 50;
+										purse['ep'] -= 1;
+									}
+									if (purse['cp'] >= coins['cp']) {
+										purse['cp'] -= coins['cp'];
+									} else {
+										while (purse['cp'] < coins['cp'] && purse['gp'] >= 0) {
+											purse['cp'] += 100;
+											purse['gp'] -= 1;
+										}
+										if (purse['cp'] >= coins['cp']) {
+											purse['cp'] -= coins['cp'];
+										} else {
+											while (purse['cp'] < coins['cp'] && purse['pp'] >= 0) {
+												purse['cp'] += 1000;
+												purse['pp'] -= 1;
+											}
+											if (purse['cp'] >= coins['cp']) {
+												purse['cp'] -= coins['cp'];
+											} else {
+												result = false;
+												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['cp'] + 'cp?', null, {noarchive:true});
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}
+
+				var cp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['cp'] })[0];
+				var sp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['sp'] })[0];
+				var ep = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['ep'] })[0];
+				var gp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['gp'] })[0];
+				var pp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['pp'] })[0];
 
 				cp.set('current', purse['cp']);
 				sp.set('current', purse['sp']);
@@ -417,6 +590,20 @@ var PurseStrings = PurseStrings || (function () {
 		} else {
 			sendChat('PurseStrings', heading + ' {{title=' + title + '}} {{show_character_name=1}} {{character_name=' + name + '}} {{content=' + content + '}}');
 		}
+	},
+	
+	prettyCoins = function (coins, dropZero=false) {
+		// Return a string of coins from a coin array for dialog
+		var result = '', joiner = ' ', tmpres = [];
+		if (coins['cp'] > 0 || !dropZero) tmpres.push(coins['cp'] + 'cp');
+		if (coins['sp'] > 0 || !dropZero) tmpres.push(coins['sp'] + 'sp');
+		if (coins['ep'] > 0 || !dropZero) tmpres.push(coins['ep'] + 'ep');
+		if (coins['gp'] > 0 || !dropZero) tmpres.push(coins['gp'] + 'gp');
+		if (coins['pp'] > 0 || !dropZero) tmpres.push(coins['pp'] + 'pp');
+		if (tmpres.length > 1) tmpres[tmpres.length-1] = 'and ' + tmpres[tmpres.length-1];
+		if (tmpres.length > 2) joiner = ', '
+		result = tmpres.join(joiner);
+		return result;
 	},
 
     //---- PUBLIC FUNCTIONS ----//

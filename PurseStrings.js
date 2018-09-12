@@ -23,7 +23,7 @@ var PurseStrings = PurseStrings || (function () {
 
     handleInput = function (msg) {
         if (msg.type == 'api' && msg.content.startsWith('!ps')) {
-			var parms = msg.content.split(/\s+/i);			
+			var parms = msg.content.split(/\s+/i);
 			if (parms[1]) {
 				switch (parms[1]) {
 					case '--setup':
@@ -199,7 +199,7 @@ var PurseStrings = PurseStrings || (function () {
 			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
 			return;
 		}
-		
+
 		var loot = parseCoins(msg.content), comments = '', recipients = [];
 		if (loot) {
 			var numParty, partyMembers = [], tmpcoins = [], xtracoins = [], splits, lefties, rando;
@@ -210,19 +210,19 @@ var PurseStrings = PurseStrings || (function () {
 				}
 			});
 			numParty = partyMembers.length;
-			
+
 			xtracoins['cp'] = (loot['cp'] % numParty);
 			xtracoins['sp'] = (loot['sp'] % numParty);
 			xtracoins['ep'] = (loot['ep'] % numParty);
 			xtracoins['gp'] = (loot['gp'] % numParty);
 			xtracoins['pp'] = (loot['pp'] % numParty);
-			
+
 			tmpcoins['cp'] = parseInt(loot['cp'] / numParty);
 			tmpcoins['sp'] = parseInt(loot['sp'] / numParty);
 			tmpcoins['ep'] = parseInt(loot['ep'] / numParty);
 			tmpcoins['gp'] = parseInt(loot['gp'] / numParty);
 			tmpcoins['pp'] = parseInt(loot['pp'] / numParty);
-			
+
 			splits = _.values(tmpcoins);
 			lefties = _.values(xtracoins);
 			rando = Math.floor(Math.random() * numParty);
@@ -237,7 +237,7 @@ var PurseStrings = PurseStrings || (function () {
 					}
 				}
 			});
-			
+
 			if (dropChange) {
 				comments = '<br>' + prettyCoins(xtracoins, true) + ' have been left over from even distribution.'
 			} else {
@@ -388,7 +388,7 @@ var PurseStrings = PurseStrings || (function () {
 								}
 							}
 						}
-						
+
 						// gold pieces
 						if (coins['gp'] > 0) {
 							if (purse['gp'] >= coins['gp']) {
@@ -430,7 +430,7 @@ var PurseStrings = PurseStrings || (function () {
 								}
 							}
 						}
-						
+
 						// electrum pieces
 						if (coins['ep'] > 0) {
 							if (purse['ep'] >= coins['ep']) {
@@ -472,7 +472,7 @@ var PurseStrings = PurseStrings || (function () {
 								}
 							}
 						}
-						
+
 						// silver pieces
 						if (coins['sp'] > 0) {
 							if (purse['sp'] >= coins['sp']) {
@@ -514,7 +514,7 @@ var PurseStrings = PurseStrings || (function () {
 								}
 							}
 						}
-						
+
 						// copper pieces
 						if (coins['cp'] > 0) {
 							if (purse['cp'] >= coins['cp']) {
@@ -594,7 +594,7 @@ var PurseStrings = PurseStrings || (function () {
 			sendChat('PurseStrings', heading + ' {{title=' + title + '}} {{show_character_name=1}} {{character_name=' + name + '}} {{content=' + content + '}}');
 		}
 	},
-	
+
 	prettyCoins = function (coins, dropZero=false) {
 		// Return a pretty (grammatically speaking) string of coins from a coin array for dialog
 		var result = '', joiner = ' ', tmpres = [];
@@ -622,6 +622,7 @@ var PurseStrings = PurseStrings || (function () {
 }());
 
 on("ready", function () {
+    'use strict';
 	PurseStrings.logReadiness();
     PurseStrings.registerEventHandlers();
 });

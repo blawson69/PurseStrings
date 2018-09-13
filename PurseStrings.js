@@ -11,7 +11,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '0.1.0',
+    var version = '2.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
 		dropChange = false,
 
@@ -68,7 +68,7 @@ var PurseStrings = PurseStrings || (function () {
     },
 
     commandSetup = function (msg) {
-		// Configure character sheet for each selected character
+		// Setup character for using PurseStrings
 		if (!msg.selected || !msg.selected.length) {
 			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
 			return;
@@ -79,7 +79,6 @@ var PurseStrings = PurseStrings || (function () {
 			if(token) {
 				if (token.get('represents') !== '') {
 					var char_id = token.get('represents');
-					//sendChat('PurseStrings', '/w GM Character ID "' + char_id + '" selected.', null, {noarchive:true});
 					var character = getObj('character', token.get('represents'));
 
 					if (!hasPurse(char_id)) {
@@ -91,12 +90,18 @@ var PurseStrings = PurseStrings || (function () {
 								});
 						});
 
-						sendChat('PurseStrings', '/w GM PurseString attributes successfully added for ' + character.get('name') + '!', null, {noarchive:true});
+                        addShowPurse(char_id);
 
+                        var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
 						var coins = parseCoins(msg.content);
 						if (coins) {
-							commandAdd(msg);
+							var initpurse = changePurse(msg.content, char_id, 'add');
+                            if (initpurse) {
+                                message += ' Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
+                            }
 						}
+
+                        showDialog('Setup Complete', character.get('name'), message, false);
 					} else {
 						sendChat('PurseStrings', '/w GM PurseString attributes already exist for ' + character.get('name') + '!', null, {noarchive:true});
 					}
@@ -608,6 +613,25 @@ var PurseStrings = PurseStrings || (function () {
 		result = tmpres.join(joiner);
 		return result;
 	},
+
+    addShowPurse = function (charid) {
+        // Adds an ability to the character during setup for the --show command
+        var abilities = findObjs({
+            name: 'ShowPurse',
+            type: 'ability',
+            characterid: charid
+        })[0];
+
+        if (!abilities) {
+            var spmacro = createObj("ability", {
+                name: 'ShowPurse',
+                characterid: charid,
+                action: '!ps --show',
+                istokenaction: true
+            });
+        }
+
+    },
 
     //---- PUBLIC FUNCTIONS ----//
 

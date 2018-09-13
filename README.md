@@ -22,7 +22,7 @@ Both of the examples below represent 30cp and 4gp:
 * **--buy** <_buyer_id_> <_seller_id_> <_coinage_>
 
 ---
-**GM Only** The GM must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This will add the necessary attributes to the character sheet(s):
+**GM Only** The GM must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command:
 
 ```!ps --setup```
 

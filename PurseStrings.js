@@ -4,7 +4,7 @@ A money management system for Roll20 using the 5eShaped Sheet.
 
 On Github:	https://github.com/blawson69/PurseStrings
 Contact me: https://app.roll20.net/users/1781274/ben-l
-Buy me coffee: https://venmo.com/theBenLawson
+Buy me a coffee: https://venmo.com/theBenLawson
 */
 
 var PurseStrings = PurseStrings || (function () {
@@ -239,7 +239,7 @@ var PurseStrings = PurseStrings || (function () {
 			});
 
 			if (dropChange) {
-				comments = '<br>' + prettyCoins(xtracoins, true) + ' have been left over from even distribution.'
+				comments = '<br>' + prettyCoins(xtracoins, true) + ' are left over from even distribution.'
 			} else {
 				var lucky = partyMembers[rando];
 				var character = getObj('character', lucky);

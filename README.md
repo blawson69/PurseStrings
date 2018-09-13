@@ -50,6 +50,8 @@ To display the contents of a character's Purse, use the `--show` parameter. It w
 
 The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a `dropChange` variable at the beginning of the script which toggles this behavior on or off. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random party member. The recipient of the leftover loot will be chosen from one of the selected tokens. The default `dropChange` value is "false."
 
+When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
+
 ---
 
 **GM Only** To simply remove coinage from a character(s) Purse (without giving it to another character) you use the `--subt` parameter along with the amount of coinage you wish to remove. If the amount of the coinage is more than what that character has in their Purse, the operation will fail. The following subtracts 10gp from each selected character:

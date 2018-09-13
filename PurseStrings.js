@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '2.0',
+    var version = '2.1',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
 		dropChange = false,
 
@@ -227,29 +227,36 @@ var PurseStrings = PurseStrings || (function () {
 			lefties = _.values(xtracoins);
 			rando = Math.floor(Math.random() * numParty);
 
-			_.each(msg.selected, function(obj) {
-				var token = getObj(obj._type, obj._id);
-				if(token && token.get('represents') !== '') {
-					var character = getObj('character', token.get('represents'));
-					var changed = changePurse(splits.join(':'), token.get('represents'), 'add');
-					if (changed) {
-						recipients.push(character.get('name'));
-					}
-				}
-			});
+            _.each(msg.selected, function(obj) {
+                var token = getObj(obj._type, obj._id);
+                if(token && token.get('represents') !== '') {
+                    var character = getObj('character', token.get('represents'));
+                    var changed = changePurse(splits.join(':'), token.get('represents'), 'add');
+                    if (changed) {
+                        recipients.push(character.get('name'));
+                    }
+                }
+            });
 
-			if (dropChange) {
-				comments = '<br>' + prettyCoins(xtracoins, true) + ' are left over from even distribution.'
-			} else {
-				var lucky = partyMembers[rando];
-				var character = getObj('character', lucky);
-				var changed = changePurse(lefties.join(':'), lucky, 'add');
-				if (changed) {
-					comments = '<br>' + character.get('name') + ' recieved ' + prettyCoins(xtracoins, true) + ' of leftover loot.';
-				} else {
-					sendChat('PurseStrings', '/w GM Could not add leftovers to ' + character.get('name'), null, {noarchive:true});
-				}
-			}
+            if (parseInt(lefties.join('')) > 0) {
+                var xcoins = prettyCoins(xtracoins, true);
+                if (dropChange) {
+                    comments = '<br>' + xcoins + ' are left over. '
+                    + '<a href="!ps --add ' + xcoins.replace(/[\,|and]/g,'') + '">Give leftovers</a>';
+                } else {
+                    var lucky = partyMembers[rando];
+                    var character = getObj('character', lucky);
+                    var changed = changePurse(lefties.join(':'), lucky, 'add');
+                    if (changed) {
+                        comments = '<br>' + character.get('name') + ' recieved ' + xcoins + ' of leftover loot.';
+                    } else {
+                        sendChat('PurseStrings', '/w GM Could not add leftovers to ' + character.get('name'), null, {noarchive:true});
+                    }
+                }
+            } else {
+                comments = '<br>All coins were evenly distributed.'
+            }
+
 			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, false);
 		} else {
 			sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});

@@ -2,8 +2,9 @@
 PurseStrings
 A money management system for Roll20 using the 5eShaped Sheet.
 
-Github:		https://github.com/blawson69/PurseStrings
-Contact:	https://app.roll20.net/users/1781274/ben-l
+On Github:	https://github.com/blawson69/PurseStrings
+Contact me: https://app.roll20.net/users/1781274/ben-l
+Buy me coffee: https://venmo.com/theBenLawson
 */
 
 var PurseStrings = PurseStrings || (function () {
@@ -29,29 +30,21 @@ var PurseStrings = PurseStrings || (function () {
 					case '--setup':
 						if (playerIsGM(msg.playerid)) {
 							commandSetup(msg);
-						} else {
-							sendChat('PurseStrings', 'Only the GM can access the --setup command', null, {noarchive:true});
 						}
 						break;
 					case '--add':
 						if (playerIsGM(msg.playerid)) {
 							commandAdd(msg);
-						} else {
-							sendChat('PurseStrings', 'Only the GM can access the --add command', null, {noarchive:true});
 						}
 						break;
 					case '--dist':
 						if (playerIsGM(msg.playerid)) {
 							commandDist(msg);
-						} else {
-							sendChat('PurseStrings', 'Only the GM can access the --dist command', null, {noarchive:true});
 						}
 						break;
 					case '--subt':
 						if (playerIsGM(msg.playerid)) {
 							commandSubt(msg);
-						} else {
-							sendChat('PurseStrings', 'Only the GM can access the --subt command', null, {noarchive:true});
 						}
 						break;
 					case '--buy':
@@ -60,6 +53,8 @@ var PurseStrings = PurseStrings || (function () {
 					case '--show':
 						commandShow(msg);
 						break;
+                    default:
+                        sendChat('PurseStrings', 'You called !ps without a valid parameter. Try again.', null, {noarchive:true});
 				}
 			} else {
 				sendChat('PurseStrings', 'You called !ps without any parameters. Try again.', null, {noarchive:true});

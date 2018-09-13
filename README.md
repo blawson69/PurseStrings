@@ -70,4 +70,4 @@ As with the `--subt` parameter, the transaction will fail if the amount of the c
 
 ### Notes
 
-PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well. It also assumes the use of the [SRD monetary system and Standard Exchange Rate](https://roll20.net/compendium/dnd5e/Treasure#content). Be aware the script does not interact with the coinage visible in the 5e Shaped character sheet. In fact, the lack of access to those values is the sole purpose of this script. As such, any amounts entered in those fields will be ignored.
+PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well. It also assumes the use of the [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). Be aware the script does not interact with the coinage visible in the 5e Shaped character sheet. In fact, the lack of access to those values is the sole purpose of this script. As such, any amounts entered in those fields will be ignored.

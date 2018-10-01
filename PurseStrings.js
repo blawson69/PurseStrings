@@ -96,7 +96,7 @@ var PurseStrings = PurseStrings || (function () {
                             }
 						}
 
-                        showDialog('Setup Complete', character.get('name'), message, false);
+                        showDialog('Setup Complete', character.get('name'), message);
 					} else {
 						sendChat('PurseStrings', '/w GM PurseString attributes already exist for ' + character.get('name') + '!', null, {noarchive:true});
 					}
@@ -117,8 +117,8 @@ var PurseStrings = PurseStrings || (function () {
 				var character = getObj('character', token.get('represents'));
 				var changed = changePurse(msg.content, token.get('represents'), 'add');
 				if (changed) {
-					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.', false);
-					commandShow(msg);
+					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.');
+					//commandShow(msg);
 				}
 			}
 		});
@@ -136,10 +136,10 @@ var PurseStrings = PurseStrings || (function () {
 				var character = getObj('character', token.get('represents'));
 				var changed = changePurse(msg.content, token.get('represents'), 'subt');
 				if (changed) {
-					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.', false);
-					commandShow(msg);
+					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.');
+					//commandShow(msg);
 				} else {
-					showDialog('Transaction Error', character.get('name'), 'You don\'t have enough money for that operation!', false);
+					showDialog('Transaction Error', character.get('name'), 'You don\'t have enough money for that operation!');
 				}
 			}
 		});
@@ -267,7 +267,7 @@ var PurseStrings = PurseStrings || (function () {
 		// Parses the input for the coin string and returns it as an array or null if error
 		var coins = null, tmpcoins = {cp:0,sp:0,ep:0,gp:0,pp:0},
 		regex = /[:]+/i,
-		commands = cmds.toString().split(/\s+/);
+		commands = cmds.toString().replace(/,/g, "").split(/\s+/);
 		if (regex.test(cmds)) {
 			// Coins sent as cp:sp:ep:gp:pp
 			_.each(commands, function (cmd) {

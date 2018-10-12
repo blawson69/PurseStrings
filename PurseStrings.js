@@ -666,7 +666,7 @@ var PurseStrings = PurseStrings || (function () {
         var purseID = findObjs({type: 'attribute', characterid: charid, name: 'pursestrings_purse_id'}, {caseInsensitive: true})[0];
         if (purseID) {
             var coins = getPurse(charid);
-            var totalWeight = ((coins['cp'] + coins['sp'] + coins['ep'] + coins['gp'] + coins['pp']) * 0.02).toFixed(0);
+            var totalWeight = ((coins['cp'] + coins['sp'] + coins['ep'] + coins['gp'] + coins['pp']) * 0.02).toFixed(2);
 
             var coinPurse = findObjs({type: 'attribute', characterid: charid, name: 'repeating_equipment_' + purseID.get('current') + '_weight'})[0];
             if (coinPurse) {

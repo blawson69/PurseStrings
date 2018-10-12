@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '2.1',
+    var version = '3.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
 		dropChange = false,
 
@@ -85,6 +85,13 @@ var PurseStrings = PurseStrings || (function () {
 								});
 						});
 
+                        var RepID = addCoinPurse(char_id);
+                        var purseID = createObj('attribute',{
+                            characterid: char_id,
+                            name: 'pursestrings_purse_id',
+                            current: RepID
+                        });
+
                         addShowPurse(char_id);
 
                         var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
@@ -118,7 +125,6 @@ var PurseStrings = PurseStrings || (function () {
 				var changed = changePurse(msg.content, token.get('represents'), 'add');
 				if (changed) {
 					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.');
-					//commandShow(msg);
 				}
 			}
 		});
@@ -137,7 +143,6 @@ var PurseStrings = PurseStrings || (function () {
 				var changed = changePurse(msg.content, token.get('represents'), 'subt');
 				if (changed) {
 					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.');
-					//commandShow(msg);
 				} else {
 					showDialog('Transaction Error', character.get('name'), 'You don\'t have enough money for that operation!');
 				}
@@ -577,6 +582,8 @@ var PurseStrings = PurseStrings || (function () {
 				ep.set('current', purse['ep']);
 				gp.set('current', purse['gp']);
 				pp.set('current', purse['pp']);
+
+                updateCoinWeight(charid);
 			} else {
 				result = false;
 				sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
@@ -633,6 +640,78 @@ var PurseStrings = PurseStrings || (function () {
             });
         }
 
+    },
+
+    addCoinPurse = function (charid) {
+        // Add an Equipment item for encumbrance of coin weight
+        const data = {};
+        var coinPurse = {
+          content: 'Container for PurseStrings script. DO NOT modify or delete!',
+          name: 'CoinPurse',
+          type: 'Adventuring Gear',
+          weight: 0
+        };
+        var RowID = generateRowID();
+        var repString = 'repeating_equipment_' + RowID;
+        Object.keys(coinPurse).forEach(function (field) {
+          data[repString + '_' + field] = coinPurse[field];
+        });
+        setAttrs(charid, data);
+
+        return RowID;
+    },
+
+    updateCoinWeight = function (charid) {
+        // Update the CoinPurse equpment item with the weight of all coins
+        var purseID = findObjs({type: 'attribute', characterid: charid, name: 'pursestrings_purse_id'}, {caseInsensitive: true})[0];
+        if (purseID) {
+            var coins = getPurse(charid);
+            var totalWeight = ((coins['cp'] + coins['sp'] + coins['ep'] + coins['gp'] + coins['pp']) * 0.02).toFixed(0);
+
+            var coinPurse = findObjs({type: 'attribute', characterid: charid, name: 'repeating_equipment_' + purseID.get('current') + '_weight'})[0];
+            if (coinPurse) {
+                coinPurse.setWithWorker('current', totalWeight);
+            } else {
+                sendChat('PurseStrings', '/w GM Could not find "repeating_equipment_' + purseID.get('current') + '_weight!"', null, {noarchive:true});
+            }
+        } else {
+            sendChat('PurseStrings', '/w GM Could not find Purse ID!', null, {noarchive:true});
+        }
+    },
+
+    //---- UTILITY FUNCTIONS ----//
+
+    generateUUID = (function () {
+        "use strict";
+        var a = 0, b = [];
+        return function() {
+            var c = (new Date()).getTime() + 0, d = c === a;
+            a = c;
+            for (var e = new Array(8), f = 7; 0 <= f; f--) {
+                e[f] = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(c % 64);
+                c = Math.floor(c / 64);
+            }
+            c = e.join("");
+            if (d) {
+                for (f = 11; 0 <= f && 63 === b[f]; f--) {
+                    b[f] = 0;
+                }
+                b[f]++;
+            } else {
+                for (f = 0; 12 > f; f++) {
+                    b[f] = Math.floor(64 * Math.random());
+                }
+            }
+            for (f = 0; 12 > f; f++){
+                c += "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(b[f]);
+            }
+            return c;
+        };
+    }()),
+
+    generateRowID = function () {
+        "use strict";
+        return generateUUID().replace(/_/g, "Z");
     },
 
     //---- PUBLIC FUNCTIONS ----//

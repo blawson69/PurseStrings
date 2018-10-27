@@ -96,7 +96,7 @@ var PurseStrings = PurseStrings || (function () {
                             }
 						}
 
-                        showDialog('Setup Complete', character.get('name'), message);
+                        showDialog('Setup Complete', character.get('name'), message, msg.who);
 					} else {
 						sendChat('PurseStrings', '/w GM PurseString attributes already exist for ' + character.get('name') + '!', null, {noarchive:true});
 					}
@@ -117,8 +117,8 @@ var PurseStrings = PurseStrings || (function () {
 				var character = getObj('character', token.get('represents'));
 				var changed = changePurse(msg.content, token.get('represents'), 'add');
 				if (changed) {
-					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.');
-					//commandShow(msg);
+					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.', character.get('name'));
+                    showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' added successfully.', msg.who);
 				}
 			}
 		});
@@ -136,10 +136,10 @@ var PurseStrings = PurseStrings || (function () {
 				var character = getObj('character', token.get('represents'));
 				var changed = changePurse(msg.content, token.get('represents'), 'subt');
 				if (changed) {
-					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.');
-					//commandShow(msg);
+					showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.', character.get('name'));
+                    showDialog('Purse Updated', character.get('name'), prettyCoins(parseCoins(msg.content), true) + ' subtracted successfully.', msg.who);
 				} else {
-					showDialog('Transaction Error', character.get('name'), 'You don\'t have enough money for that operation!');
+					showDialog('Transaction Error', character.get('name'), 'You don\'t have enough money for that operation!', msg.who);
 				}
 			}
 		});
@@ -163,7 +163,7 @@ var PurseStrings = PurseStrings || (function () {
 					var total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
 					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(2) + ' lbs.';
 
-					showDialog('Purse Contents', character.get('name'), content, false);
+					showDialog('Purse Contents', character.get('name'), content, msg.who);
 				}
 			}
 		});
@@ -180,16 +180,16 @@ var PurseStrings = PurseStrings || (function () {
 				if (purchased) {
 					var sold = changePurse(msg.content, seller.get('id'), 'add');
 					if (sold) {
-						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + prettyCoins(parseCoins(msg.content), true) + ' to ' + seller.get('name') + '.', false);
+						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + prettyCoins(parseCoins(msg.content), true) + ' to ' + seller.get('name') + '.', msg.who, false);
 					}
 				} else {
-					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', false);
+					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', msg.who, false);
 				}
 			} else {
-				showDialog('Transaction Error', '', 'You must have a valid seller to do business with!', false);
+				showDialog('Transaction Error', buyer.get('name'), 'You must have a valid seller to do business with!', msg.who, false);
 			}
 		} else {
-			showDialog('Transaction Error', '', 'You must select a buyer and/or seller to do business!', false);
+			showDialog('Transaction Error', '', 'You must select a buyer and/or seller to do business!', msg.who, false);
 		}
 	},
 
@@ -225,7 +225,7 @@ var PurseStrings = PurseStrings || (function () {
 
 			splits = _.values(tmpcoins);
 			lefties = _.values(xtracoins);
-			rando = Math.floor(Math.random() * numParty);
+			rando = randomInteger(numParty);
 
             _.each(msg.selected, function(obj) {
                 var token = getObj(obj._type, obj._id);
@@ -257,7 +257,7 @@ var PurseStrings = PurseStrings || (function () {
                 comments = '<br>All coins were evenly distributed.'
             }
 
-			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, false);
+			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, msg.who, false);
 		} else {
 			sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
 		}
@@ -267,10 +267,10 @@ var PurseStrings = PurseStrings || (function () {
 		// Parses the input for the coin string and returns it as an array or null if error
 		var coins = null, tmpcoins = {cp:0,sp:0,ep:0,gp:0,pp:0},
 		regex = /[:]+/i,
-		commands = cmds.toString().replace(/,/g, "").split(/\s+/);
+		cmdString = cmds.toString().replace(/,/g, "").replace(/\s+([cp|sp|ep|gp|pp])/gi, '$1').split(/\s+/);
 		if (regex.test(cmds)) {
 			// Coins sent as cp:sp:ep:gp:pp
-			_.each(commands, function (cmd) {
+			_.each(cmdString, function (cmd) {
 				if (regex.test(cmd)) {
 					var msgcoins = cmd.split(':');
 					tmpcoins['cp'] = msgcoins[0] && !isNaN(msgcoins[0]) ? parseInt(msgcoins[0]) : 0;
@@ -284,7 +284,7 @@ var PurseStrings = PurseStrings || (function () {
 		} else {
 			// Coins sent as single denomination, e.g. 30cp or 100gp
 			regex = /^\d+[cp|sp|ep|gp|pp]/i;
-			_.each(commands, function (cmd) {
+			_.each(cmdString, function (cmd) {
 				if (regex.test(cmd)) {
 					if (cmd.endsWith('cp')) tmpcoins['cp'] = parseInt(cmd);
 					if (cmd.endsWith('sp')) tmpcoins['sp'] = parseInt(cmd);
@@ -589,17 +589,24 @@ var PurseStrings = PurseStrings || (function () {
 		return result;
 	},
 
-	showDialog = function (title, name, content, whisper=true) {
+	showDialog = function (title, name, content, player, whisper=true) {
 		// Outputs a 5e Shaped dialog box
-		var heading = '&{template:5e-shaped} '
-		if (whisper) {
-			heading = '/w ' + heading;
-		}
-		if (name == '') {
-			sendChat('PurseStrings', heading + ' {{title=' + title + '}} {{content=' + content + '}}');
-		} else {
-			sendChat('PurseStrings', heading + ' {{title=' + title + '}} {{show_character_name=1}} {{character_name=' + name + '}} {{content=' + content + '}}');
-		}
+        var dialogStr = '&{template:5e-shaped} {{title=' + title + '}} {{content=' + content + '}}';
+        var whisperTo = '', gm = /\(GM\)/i;
+        whisperTo = gm.test(player) ? 'GM' : '"' + player + '"'
+
+        if (name !== '') {
+            dialogStr += ' {{show_character_name=1}} {{character_name=' + name + '}}';
+        }
+
+        if (whisper) {
+            sendChat('PurseStrings', '/w ' + whisperTo + ' ' + dialogStr);
+            //if (whisperTo !== 'GM') {
+            //    sendChat('PurseStrings', '/w GM ' + dialogStr + ' {{text=Called by '+ player + '}}');
+            //}
+        } else {
+            sendChat('PurseStrings', dialogStr);
+        }
 	},
 
 	prettyCoins = function (coins, dropZero=false) {

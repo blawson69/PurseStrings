@@ -167,7 +167,7 @@ var PurseStrings = PurseStrings || (function () {
 
     commandDrop = function (msg) {
         // Set the cross-session default falue of dropChange
-        varregex = /true|yes|sure|yep/i,
+        var regex = /true|yes|sure|yep/i,
         cmdString = msg.content.toString();
 
         if (regex.test(cmdString)) {
@@ -306,7 +306,7 @@ var PurseStrings = PurseStrings || (function () {
 
 		if (loot && numParty > 0) {
 			var tmpcoins = [], xtracoins = [], splits, lefties, rando;
-            rando = randomInteger(numParty);
+            rando = randomInteger(numParty) - 1;
 
 			xtracoins['cp'] = (loot['cp'] % numParty);
 			xtracoins['sp'] = (loot['sp'] % numParty);
@@ -326,7 +326,6 @@ var PurseStrings = PurseStrings || (function () {
             _.each(partyMembers, function (id) {
                 var member = getObj('character', id);
                 if (member) {
-                    sendChat('PurseStrings', '/w GM changePurse("' + splits.join(':') + '", "' + id + '", "add")', null, {noarchive:true});
                     var changed = changePurse(splits.join(':'), id, 'add');
                     if (changed) {
                         recipients.push(member.get('name'));
@@ -339,7 +338,7 @@ var PurseStrings = PurseStrings || (function () {
             if (parseInt(lefties.join('')) > 0) {
                 var xcoins = prettyCoins(xtracoins, true);
                 if (state['PURSESTRINGS'].dropChange) {
-                    comments = '<br>' + xcoins + ' are left over. '
+                    comments = '<br>You have ' + xcoins + ' left over. '
                     + '<a href="!ps --add ' + xcoins.replace(/[\,|and]/g,'') + '">Give leftovers</a>';
                 } else {
                     var lucky = partyMembers[rando];
@@ -686,9 +685,10 @@ var PurseStrings = PurseStrings || (function () {
 		} else {
 			result = false;
             var character = getObj('character', char_id);
-			sendChat('PurseStrings', '/w GM ' + character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup', null, {noarchive:true});
+            if (character) {
+                sendChat('PurseStrings', '/w GM ' + character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup', null, {noarchive:true});
+            }
 		}
-        sendChat('PurseStrings', 'changePurse has ended! Result=' + result + ' and char_id = "' + char_id + '"', null, {noarchive:true});
 		return result;
 	},
 

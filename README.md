@@ -3,11 +3,16 @@
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped). It adds a "Purse" to a character for storing coinage, and will add/subtract appropriately when collecting loot, paying for goods/services, etc. (See the [Notes](#notes) below for more info.)
 
 ### Coinage
-Coinage can be sent as either a list of amounts & denominations (no spaces nor commas), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest with zeros for placeholders (no spaces).
+Coinage can be sent as either a list of amounts & denominations (no spaces nor commas), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest with zeros for placeholders. Commas and spaces are now handled appropriately as well.
 
-Both of the examples below represent 30cp and 4gp:
+All of the examples below represent 30cp and 4gp:
 * 30cp 4gp
+* 30 cp 4 gp
+* 30cp, 4gp
 * 30:0:0:4:0
+
+### Party Members
+You can add characters to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. Giving individual characters money still requires that the character(s) token be selected.
 
 ### Syntax
 
@@ -15,6 +20,7 @@ Both of the examples below represent 30cp and 4gp:
 
 ### Parameters:
 * **--setup**
+* **--config**
 * **--party**
 * **--show**
 * **--add** <_coinage_>
@@ -24,13 +30,20 @@ Both of the examples below represent 30cp and 4gp:
 * **--buy** <_buyer_id_> <_seller_id_> <_coinage_>
 
 ---
-**GM Only** The GM must setup player characters and all relevant NPCs before using PurseStrings. You must select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command:
+**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command to view their Purse:
 
 ```!ps --setup```
 
 If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to each selected character. The following adds 50cp, 20sp, and 10gp to each character selected:
 
 ```!ps --setup 50:20:0:10:0```
+
+---
+**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command above, use the `--config` command to see a list of your Party Members and the value of your **drop** variable. The config menu will give a link to change your drop variable as well as a link to add Party Members.
+
+```!ps --party```
+
+See below for more information about the **drop** variable and adding Party Members to the list.
 
 ---
 **GM Only** You may add characters to a Party Members list that persists between sessions. This will allow you to utilize the `--dist` command without needing player tokens selected. To do this, select the tokens representing the characters you wish to add and use the following command:

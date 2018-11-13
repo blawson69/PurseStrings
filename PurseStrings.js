@@ -338,8 +338,7 @@ var PurseStrings = PurseStrings || (function () {
             if (parseInt(lefties.join('')) > 0) {
                 var xcoins = prettyCoins(xtracoins, true);
                 if (state['PURSESTRINGS'].dropChange) {
-                    comments = '<br>You have ' + xcoins + ' left over. '
-                    + '<a href="!ps --add ' + xcoins.replace(/[\,|and]/g,'') + '">Give leftovers</a>';
+                    comments = '<br><br>**You still have ' + xcoins + ' undestributed!** Please choose a someone to receive the leftovers.';
                 } else {
                     var lucky = partyMembers[rando];
                     var luckyOne = getObj('character', lucky);
@@ -355,6 +354,10 @@ var PurseStrings = PurseStrings || (function () {
             }
 
 			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following Party Members:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each Member has received ' + prettyCoins(tmpcoins, true) + '.' + comments, msg.who, false);
+            if (parseInt(lefties.join('')) > 0 && state['PURSESTRINGS'].dropChange) {
+                adminDialog('Leftover Loot', 'There are ' + xcoins + ' left over. '
+                + '<a href="!ps --add ' + xcoins.replace(/[\,|and]/g,'') + '">Give leftovers</a>');
+            }
 		} else {
             if (numParty == 0) {
                 adminDialog('Distribution Error', 'There are no Party Members to whom you can distribute loot!');

@@ -14,11 +14,14 @@ var PurseStrings = PurseStrings || (function () {
 
     var version = '2.2',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
-		dropChange = false,
+        partyUpdated = false,
 
-	logReadiness = function (msg) {
-		log('--> PurseStrings v' + version + ' <-- Initialized');
-	},
+    checkInstall = function () {
+        if (!_.has(state, 'PURSESTRINGS')) state['PURSESTRINGS'] = state['PURSESTRINGS'] || {};
+        if (typeof state['PURSESTRINGS'].partyMembers == 'undefined') state['PURSESTRINGS'].partyMembers = [];
+        if (typeof state['PURSESTRINGS'].dropChange == 'undefined') state['PURSESTRINGS'].dropChange = false;
+        log('--> PurseStrings v' + version + ' <-- Initialized');
+    },
 
     //----- INPUT HANDLER -----//
 
@@ -47,6 +50,21 @@ var PurseStrings = PurseStrings || (function () {
 							commandSubt(msg);
 						}
 						break;
+                    case '--drop':
+  						if (playerIsGM(msg.playerid)) {
+  							commandDrop(msg);
+  						}
+  						break;
+                    case '--party':
+  						if (playerIsGM(msg.playerid)) {
+  							commandParty(msg);
+  						}
+  						break;
+                    case '--config':
+  						if (playerIsGM(msg.playerid)) {
+  							commandConfig(msg);
+  						}
+  						break;
 					case '--buy':
 						commandBuy(msg);
 						break;
@@ -96,7 +114,7 @@ var PurseStrings = PurseStrings || (function () {
                             }
 						}
 
-                        showDialog('Setup Complete', character.get('name'), message, msg.who);
+                        adminDialog('Setup Complete', message);
 					} else {
 						sendChat('PurseStrings', '/w GM PurseString attributes already exist for ' + character.get('name') + '!', null, {noarchive:true});
 					}
@@ -104,6 +122,88 @@ var PurseStrings = PurseStrings || (function () {
 			}
 		});
 	},
+
+    commandParty = function (msg) {
+        // Manage party of characters who will be receiving loot in commandDist
+        var message = '', regex = /\-\-reset/i,
+        cmdString = msg.content.toString();
+
+        if (regex.test(cmdString)) {
+            state['PURSESTRINGS'].partyMembers = [];
+            message += '<i>Party members have been reset</i><br><br>';
+        }
+
+    	if (!msg.selected || !msg.selected.length) {
+    		message += 'No tokens were selected!<br><br>';
+    	} else {
+            var members = [];
+            message = 'The following characters have been added to the Party Members list for loot distribution:<br><ul>';
+            _.each(msg.selected, function(obj) {
+                var token = getObj(obj._type, obj._id);
+                if(token) {
+                    if (token.get('represents') !== '') {
+                        var char_id = token.get('represents');
+                        var character = getObj('character', char_id);
+                        if (!_.find(state['PURSESTRINGS'].partyMembers, function(id) {return id == char_id;})) {
+                            state['PURSESTRINGS'].partyMembers.push(char_id);
+                            members.push('<li>' + character.get('name') + '</li>');
+                        }
+                    }
+                }
+            });
+
+            if (!members.length) {
+                message += '<li>No valid characters selected!</li>';
+            } else {
+                message += members.join('');
+            }
+            message += '</ul>';
+        }
+        message += '<a href="!ps --config">Settings</a>';
+
+        adminDialog('Party Members', message);
+        partyUpdated = true;
+    },
+
+    commandDrop = function (msg) {
+        // Set the cross-session default falue of dropChange
+        var regex = /true|yes|sure|yep/i,
+        cmdString = msg.content.toString();
+
+        if (regex.test(cmdString)) {
+            state['PURSESTRINGS'].dropChange = true;
+        } else {
+            state['PURSESTRINGS'].dropChange = false;
+        }
+
+        commandConfig(msg);
+    },
+
+    commandConfig = function (msg) {
+        // Config dialog with links to make changes
+        var message = 'Leftover loot currently is set to be ';
+
+        if (state['PURSESTRINGS'].dropChange) {
+            message += 'dropped for non-random distribution. <a href="!ps --drop false">Change</a>';
+        } else {
+            message += 'given to a random Party Member. <a href="!ps --drop true">Change</a>';
+        }
+
+        message += '<br><br><b style="color:#591209;">PARTY MEMBERS</b><br>';
+        if (state['PURSESTRINGS'].partyMembers.length) {
+            message += 'The following characters are in the Party Members list for loot distribution:<br><ul>';
+            _.each(state['PURSESTRINGS'].partyMembers, function(char_id) {
+                var character = getObj('character', char_id);
+                message += '<li>' + character.get('name') + '</li>';
+            });
+            message += "</ul>";
+        } else {
+            message += '<b>Warning:</b> There are no characters in the Party Members list! ';
+        }
+        message += 'To add one or more characters, select their token(s) and <a href="!ps --party">click here</a>.';
+
+        adminDialog('Settings', message);
+    },
 
 	commandAdd = function (msg) {
 		if(!msg.selected || !msg.selected.length){
@@ -163,7 +263,7 @@ var PurseStrings = PurseStrings || (function () {
 					var total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
 					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(2) + ' lbs.';
 
-					showDialog('Purse Contents', character.get('name'), content, msg.who);
+					showDialog('Purse Contents', character.get('name'), content, msg.who, whispers(msg.content));
 				}
 			}
 		});
@@ -195,21 +295,18 @@ var PurseStrings = PurseStrings || (function () {
 
     commandDist = function (msg) {
 		// Distribute loot between selected characters
-		if(!msg.selected || !msg.selected.length){
-			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
-			return;
-		}
+		var loot = parseCoins(msg.content), comments = '', recipients = [],
+        numParty, partyMembers = state['PURSESTRINGS'].partyMembers;
+        numParty = partyMembers.length;
 
-		var loot = parseCoins(msg.content), comments = '', recipients = [];
-		if (loot) {
-			var numParty, partyMembers = [], tmpcoins = [], xtracoins = [], splits, lefties, rando;
-			_.each(msg.selected, function(obj) {
-				var selected = getObj(obj._type, obj._id);
-				if(selected && selected.get('represents') !== '') {
-					partyMembers.push(selected.get('represents'));
-				}
-			});
-			numParty = partyMembers.length;
+        if(msg.selected && msg.selected.length > 0) {
+            // This is where we'll include selected tokens with the Party
+            sendChat('PurseStrings', '/w GM You also had ' + msg.selected.length + ' tokens selected.', null, {noarchive:true});
+        }
+
+		if (loot && numParty > 0) {
+			var tmpcoins = [], xtracoins = [], splits, lefties, rando;
+            rando = randomInteger(numParty) - 1;
 
 			xtracoins['cp'] = (loot['cp'] % numParty);
 			xtracoins['sp'] = (loot['sp'] % numParty);
@@ -225,41 +322,48 @@ var PurseStrings = PurseStrings || (function () {
 
 			splits = _.values(tmpcoins);
 			lefties = _.values(xtracoins);
-			rando = randomInteger(numParty);
 
-            _.each(msg.selected, function(obj) {
-                var token = getObj(obj._type, obj._id);
-                if(token && token.get('represents') !== '') {
-                    var character = getObj('character', token.get('represents'));
-                    var changed = changePurse(splits.join(':'), token.get('represents'), 'add');
+            _.each(partyMembers, function (id) {
+                var member = getObj('character', id);
+                if (member) {
+                    var changed = changePurse(splits.join(':'), id, 'add');
                     if (changed) {
-                        recipients.push(character.get('name'));
+                        recipients.push(member.get('name'));
                     }
+                } else {
+                    sendChat('PurseStrings', '/w GM "' + id + '" is an invalid ID.', null, {noarchive:true});
                 }
             });
 
             if (parseInt(lefties.join('')) > 0) {
                 var xcoins = prettyCoins(xtracoins, true);
-                if (dropChange) {
-                    comments = '<br>' + xcoins + ' are left over. '
-                    + '<a href="!ps --add ' + xcoins.replace(/[\,|and]/g,'') + '">Give leftovers</a>';
+                if (state['PURSESTRINGS'].dropChange) {
+                    comments = '<br><br>**You still have ' + xcoins + ' undestributed!** Please choose a someone to receive the leftovers.';
                 } else {
                     var lucky = partyMembers[rando];
-                    var character = getObj('character', lucky);
+                    var luckyOne = getObj('character', lucky);
                     var changed = changePurse(lefties.join(':'), lucky, 'add');
                     if (changed) {
-                        comments = '<br>' + character.get('name') + ' recieved ' + xcoins + ' of leftover loot.';
+                        comments = '<br>' + luckyOne.get('name') + ' recieved ' + xcoins + ' of leftover loot.';
                     } else {
-                        sendChat('PurseStrings', '/w GM Could not add leftovers to ' + character.get('name'), null, {noarchive:true});
+                        sendChat('PurseStrings', '/w GM Could not add leftovers to ' + luckyOne.get('name'), null, {noarchive:true});
                     }
                 }
             } else {
                 comments = '<br>All coins were evenly distributed.'
             }
 
-			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following characters:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each has received ' + prettyCoins(tmpcoins, true) + '.' + comments, msg.who, false);
+			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following Party Members:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each Member has received ' + prettyCoins(tmpcoins, true) + '.' + comments, msg.who, false);
+            if (parseInt(lefties.join('')) > 0 && state['PURSESTRINGS'].dropChange) {
+                adminDialog('Leftover Loot', 'There are ' + xcoins + ' left over. '
+                + '<a href="!ps --add ' + xcoins.replace(/[\,|and]/g,'') + '">Give leftovers</a>');
+            }
 		} else {
-			sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
+            if (numParty == 0) {
+                adminDialog('Distribution Error', 'There are no Party Members to whom you can distribute loot!');
+            } else {
+                adminDialog('Distribution Error', 'No coinage was indicated or coinage syntax was incorrect!');
+            }
 		}
     },
 
@@ -299,32 +403,32 @@ var PurseStrings = PurseStrings || (function () {
 		return coins;
     },
 
-	hasPurse = function (charid) {
+	hasPurse = function (id) {
 		// Returns whether the provided character has been setup with the correct attributes
 		var result = true;
-		_.each(attributes, function(attribute) {
-			var curAttr = findObjs({
-				_type: 'attribute',
-				characterid: charid,
-				name: attribute
-			}, {caseInsensitive: true})[0];
-			if (!curAttr) {
-				result = false;
-			}
-		});
+        _.each(attributes, function(attribute) {
+            var curAttr = findObjs({
+                _type: 'attribute',
+                characterid: id,
+                name: attribute
+            }, {caseInsensitive: true})[0];
+            if (!curAttr) {
+                result = false;
+            }
+        });
 
 		return result;
 	},
 
-	getPurse = function (charid) {
+	getPurse = function (char_id) {
 		// Returns an array holding the given character's Purse currency
 		var purse = [];
-		if (hasPurse(charid)) {
-			purse['cp'] = parseInt(getAttrByName(charid, attributes['cp'])) || 0;
-			purse['sp'] = parseInt(getAttrByName(charid, attributes['sp'])) || 0;
-			purse['ep'] = parseInt(getAttrByName(charid, attributes['ep'])) || 0;
-			purse['gp'] = parseInt(getAttrByName(charid, attributes['gp'])) || 0;
-			purse['pp'] = parseInt(getAttrByName(charid, attributes['pp'])) || 0;
+		if (hasPurse(char_id)) {
+			purse['cp'] = parseInt(getAttrByName(char_id, attributes['cp'])) || 0;
+			purse['sp'] = parseInt(getAttrByName(char_id, attributes['sp'])) || 0;
+			purse['ep'] = parseInt(getAttrByName(char_id, attributes['ep'])) || 0;
+			purse['gp'] = parseInt(getAttrByName(char_id, attributes['gp'])) || 0;
+			purse['pp'] = parseInt(getAttrByName(char_id, attributes['pp'])) || 0;
 		} else {
 			purse = null;
 		}
@@ -332,14 +436,13 @@ var PurseStrings = PurseStrings || (function () {
 		return purse;
 	},
 
-	changePurse = function (pockets, charid, type='add') {
+	changePurse = function (pockets, char_id, type='add') {
 		// Add or subtract from a character's Purse
 		var result = true;
-		var character = getObj('character', charid);
-		if (hasPurse(character.get('id'))) {
+		if (hasPurse(char_id)) {
 			var coins = parseCoins(pockets);
 			if (coins) {
-				var purse = getPurse(character.get('id'));
+				var purse = getPurse(char_id);
 
 				if (type == 'add') {
 					purse['cp'] += coins['cp'];
@@ -566,26 +669,29 @@ var PurseStrings = PurseStrings || (function () {
 					}
 				}
 
-				var cp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['cp'] })[0];
-				var sp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['sp'] })[0];
-				var ep = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['ep'] })[0];
-				var gp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['gp'] })[0];
-				var pp = findObjs({ type: 'attribute', characterid: character.get('id'), name: attributes['pp'] })[0];
+				var cp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['cp'] })[0];
+				var sp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['sp'] })[0];
+				var ep = findObjs({ type: 'attribute', characterid: char_id, name: attributes['ep'] })[0];
+				var gp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['gp'] })[0];
+				var pp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['pp'] })[0];
 
 				cp.set('current', purse['cp']);
 				sp.set('current', purse['sp']);
 				ep.set('current', purse['ep']);
 				gp.set('current', purse['gp']);
 				pp.set('current', purse['pp']);
+
 			} else {
 				result = false;
 				sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
 			}
 		} else {
 			result = false;
-			sendChat('PurseStrings', '/w GM ' + character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup', null, {noarchive:true});
+            var character = getObj('character', char_id);
+            if (character) {
+                sendChat('PurseStrings', '/w GM ' + character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup', null, {noarchive:true});
+            }
 		}
-
 		return result;
 	},
 
@@ -609,6 +715,12 @@ var PurseStrings = PurseStrings || (function () {
         }
 	},
 
+	adminDialog = function (title, content) {
+		// Outputs a 5e Shaped dialog box strictly for GM
+        var message = '/w GM &{template:5e-shaped} {{title=' + title + '}} {{content=' + content + '}}';
+        sendChat('PurseStrings', message, null, {noarchive:true});
+	},
+
 	prettyCoins = function (coins, dropZero=false) {
 		// Return a pretty (grammatically speaking) string of coins from a coin array for dialog
 		var result = '', joiner = ' ', tmpres = [];
@@ -623,23 +735,35 @@ var PurseStrings = PurseStrings || (function () {
 		return result;
 	},
 
-    addShowPurse = function (charid) {
+    addShowPurse = function (char_id) {
         // Adds an ability to the character during setup for the --show command
         var abilities = findObjs({
             name: 'ShowPurse',
             type: 'ability',
-            characterid: charid
+            characterid: char_id
         })[0];
 
         if (!abilities) {
             var spmacro = createObj("ability", {
                 name: 'ShowPurse',
-                characterid: charid,
+                characterid: char_id,
                 action: '!ps --show',
                 istokenaction: true
             });
         }
 
+    },
+
+    whispers = function (cmds) {
+        // Returns whether or not "--whisper" was sent
+        var result = false, regex = /\-\-whisper/i,
+        cmdString = cmds.toString().split(/\s+/);
+
+        if (regex.test(cmds)) {
+            result = true;
+        }
+
+    return result;
     },
 
     //---- PUBLIC FUNCTIONS ----//
@@ -649,13 +773,13 @@ var PurseStrings = PurseStrings || (function () {
 	};
 
     return {
-		logReadiness: logReadiness,
+		checkInstall: checkInstall,
 		registerEventHandlers: registerEventHandlers
 	};
 }());
 
 on("ready", function () {
     'use strict';
-	PurseStrings.logReadiness();
+	PurseStrings.checkInstall();
     PurseStrings.registerEventHandlers();
 });

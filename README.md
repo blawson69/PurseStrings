@@ -99,6 +99,10 @@ To exchange money, you use the `--buy` parameter along with the character ID of 
 
 As with the `--subt` parameter, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse, and equivalences will be used for making change.
 
+If you are using `--buy` to purchase an item, you may send the optional `item|<_item_description_>` parameter as a way to better describe the transaction. This parameter *must come last* and will be included in the transaction dialog.
+
+```!ps --buy @{selected|character_id} @{target|character_id} 50gp item|Potion of Healing```
+
 ### Notes
 
 PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well. It also assumes the use of the [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). Be aware the script does not interact with the coinage visible in the 5e Shaped character sheet. In fact, the lack of access to those values is the sole purpose of this script. As such, any amounts entered in those fields will be ignored.

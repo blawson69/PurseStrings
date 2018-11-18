@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '2.2',
+    var version = '2.3',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
         partyUpdated = false,
 
@@ -270,9 +270,11 @@ var PurseStrings = PurseStrings || (function () {
 	},
 
 	commandBuy = function (msg) {
-		var seller, buyer, commands = msg.content.split(/\s+/);
+		var seller, buyer, item, commands = msg.content.split(/\s+/);
 		if (commands[2] && commands[2] !== '') buyer = getObj('character', commands[2]);
 		if (commands[3] && commands[3] !== '') seller = getObj('character', commands[3]);
+        item = getItemDesc(msg);
+        item = item.length > 0 ? ' for ' + item : item;
 
 		if (buyer && seller) {
 			if (hasPurse(seller.get('id'))) {
@@ -280,7 +282,7 @@ var PurseStrings = PurseStrings || (function () {
 				if (purchased) {
 					var sold = changePurse(msg.content, seller.get('id'), 'add');
 					if (sold) {
-						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + prettyCoins(parseCoins(msg.content), true) + ' to ' + seller.get('name') + '.', msg.who, false);
+						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + prettyCoins(parseCoins(msg.content), true) + ' to ' + seller.get('name') + item + '.', msg.who, false);
 					}
 				} else {
 					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', msg.who, false);
@@ -765,6 +767,40 @@ var PurseStrings = PurseStrings || (function () {
 
     return result;
     },
+
+    getItemDesc = function (msg) {
+        //Returns the item description sent with the commandBuy command
+        var desc = '', pos = msg.content.search(/item\|/i);
+        if (pos >= 0) {
+            desc = msg.content.slice(pos + 5);
+        }
+        return HE(desc);
+    },
+
+    esRE = function (s) {
+        var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
+        return s.replace(escapeForRegexp,"\\$1");
+    },
+
+    HE = (function() {
+        var entities={
+                //' ' : '&'+'nbsp'+';',
+                '<' : '&'+'lt'+';',
+                '>' : '&'+'gt'+';',
+                "'" : '&'+'#39'+';',
+                '@' : '&'+'#64'+';',
+                '{' : '&'+'#123'+';',
+                '|' : '&'+'#124'+';',
+                '}' : '&'+'#125'+';',
+                '[' : '&'+'#91'+';',
+                ']' : '&'+'#93'+';',
+                '"' : '&'+'quot'+';'
+            },
+            re = new RegExp('('+_.map(_.keys(entities),esRE).join('|')+')','g');
+        return function(s){
+            return s.replace(re, function(c){ return entities[c] || c; });
+        };
+    }()),
 
     //---- PUBLIC FUNCTIONS ----//
 

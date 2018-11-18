@@ -3,7 +3,7 @@
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped). It adds a "Purse" to a character for storing coinage, and will add/subtract appropriately when collecting loot, paying for goods/services, etc. (See the [Notes](#notes) below for more info.)
 
 ### Coinage
-Coinage can be sent as either a list of amounts & denominations (no spaces nor commas), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest with zeros for placeholders. Commas and spaces are now handled appropriately as well.
+Coinage can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest with zeros for placeholders.
 
 All of the examples below represent 30cp and 4gp:
 * 30cp 4gp

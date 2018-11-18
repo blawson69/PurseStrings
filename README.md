@@ -41,7 +41,7 @@ If you wish to add a starting amount to the selected characters, you can optiona
 ---
 **GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command above, use the `--config` command to see a list of your Party Members and the value of your **drop** variable. The config menu will give a link to change your drop variable as well as a link to add Party Members.
 
-```!ps --party```
+```!ps --config```
 
 See below for more information about the **drop** variable and adding Party Members to the list.
 

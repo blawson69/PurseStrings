@@ -14,7 +14,7 @@ All of the examples below represent 30cp and 4gp:
 ### Party Members
 You can add characters to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. Giving individual characters money still requires that the character(s) token be selected.
 
-###Merchants Setup
+### Merchants Setup
 Merchants are NPCs you have set up with PurseStrings that have items to sell. To create an inventory of items, follow the instructions below.
 * Edit the NPC and go to the GM Notes field.
 * The first line must be 'PurseStrings Inventory' and nothing else.

@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '2.3',
+    var version = '2.4',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
         partyUpdated = false,
 

@@ -14,6 +14,15 @@ All of the examples below represent 30cp and 4gp:
 ### Party Members
 You can add characters to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. Giving individual characters money still requires that the character(s) token be selected.
 
+###Merchants Setup
+Merchants are NPCs you have set up with PurseStrings that have items to sell. To create an inventory of items, follow the instructions below.
+* Edit the NPC and go to the GM Notes field.
+* The first line must be 'PurseStrings Inventory' and nothing else.
+* Enter each item on its own line in the following manner:
+    Item Name|price|quantity
+* If you have multiple categories, you may add category headers by simply giving the category name its own line.
+* Click the 'Save Changes' button.
+
 ### Syntax
 
 ```!ps <parms>```
@@ -28,6 +37,7 @@ You can add characters to a Party Members list which persists across sessions. T
 * **--drop**
 * **--subt** <_coinage_>
 * **--buy** <_buyer_id_> <_seller_id_> <_coinage_>
+* **--invlist** <_merchant_id_>
 
 ---
 **GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command to view their Purse:
@@ -62,6 +72,8 @@ Passing this command without tokens selected will *remove all characters from th
 To display the contents of a character's Purse, use the `--show` parameter. It will display Purse contents for all selected tokens, and shows the total weight of all coins for encumbrance purposes:
 
 ```!ps --show```
+
+You may also send an optional `--whisper` command to make --show whisper the results.
 
 ---
 **GM Only** To add coinage to a character(s) Purse, simply pass it with the `--add` parameter. The following adds 10gp to each selected character:
@@ -102,6 +114,11 @@ As with the `--subt` parameter, the transaction will fail if the amount of the c
 If you are using `--buy` to purchase an item, you may send the optional `item|<_item_description_>` parameter as a way to better describe the transaction. This parameter *must come last* and will be included in the transaction dialog.
 
 ```!ps --buy @{selected|character_id} @{target|character_id} 50gp item|Potion of Healing```
+
+---
+**GM Only** Merchants that have already been setup with an inventory (see above) may display their inventory using the `--invlist` command followed by the character ID:
+
+```!ps --invlist @{selected|character_id}```
 
 ### Notes
 

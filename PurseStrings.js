@@ -65,6 +65,11 @@ var PurseStrings = PurseStrings || (function () {
   							commandConfig(msg);
   						}
   						break;
+                    case '--invlist':
+  						if (playerIsGM(msg.playerid)) {
+  							commandInventory(msg);
+  						}
+  						break;
 					case '--buy':
 						commandBuy(msg);
 						break;
@@ -367,6 +372,41 @@ var PurseStrings = PurseStrings || (function () {
                 adminDialog('Distribution Error', 'No coinage was indicated or coinage syntax was incorrect!');
             }
 		}
+    },
+
+    commandInventory = function (msg) {
+        //Shows the inventory for a merchant character
+        var merchant, char_id = '', inventory = '', commands = msg.content.split(/\s+/);
+		if (commands[2] && commands[2] !== '') {
+            char_id = commands[2];
+            merchant = getObj('character', char_id);
+        }
+        if (merchant && hasPurse(char_id)) {
+            merchant.get('gmnotes', function (gmnotes) {
+                var notes = decodeEditorText(gmnotes, {asArray:true});
+                if (notes && notes[0].match(/^PurseStrings Inventory$/i) !== null) {
+                    notes.shift();
+                    inventory = '&{template:5e-shaped} {{title=Inventory}} {{show_character_name=1}} {{character_name=' + merchant.get('name') + '}} ';
+                    _.each(notes, function(item) {
+                        if (item.search(/\|/) > 0) {
+                            let a = item.split('|');
+                            let safe = a[0].replace(/\(/, '&lpar;').replace(/\)/, '&rpar;');
+                            inventory += '{{' + a[0] + '=' + a[1] +
+                            ' [Buy](!ps --buy &#64;&lbrace;selected|character_id&rbrace; ' + char_id + ' ' +
+                            a[1] + ' --inv item|' + safe + ') }} ';
+                        } else {
+                            inventory += '{{' + item.trim() + '=}} ';
+                        }
+                    });
+                    sendChat(merchant.get('name'), inventory);
+                } else {
+                    sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
+                }
+            });
+        } else {
+            sendChat('PurseStrings', '/w GM Merchant character is not set up for PurseStrings!', null, {noarchive:true});
+        }
+        return inventory;
     },
 
 	parseCoins = function (cmds) {
@@ -765,7 +805,7 @@ var PurseStrings = PurseStrings || (function () {
             result = true;
         }
 
-    return result;
+        return result;
     },
 
     getItemDesc = function (msg) {
@@ -775,6 +815,22 @@ var PurseStrings = PurseStrings || (function () {
             desc = msg.content.slice(pos + 5);
         }
         return HE(desc);
+    },
+
+    decodeEditorText = function (t, o) {
+        // Strips the editor encoding from GMNotes (thanks to The Aaron!)
+        let w = t;
+        o = Object.assign({ separator: '\r\n', asArray: false }, o);
+        /* Token GM Notes */
+        if (/^%3Cp%3E/.test(w)) {
+            w = unescape(w);
+        }
+        if (/^<p>/.test(w)) {
+            let lines = w.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
+            return o.asArray ? lines : lines.join(o.separator);
+        }
+        /* neither */
+        return t;
     },
 
     esRE = function (s) {

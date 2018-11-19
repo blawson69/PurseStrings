@@ -118,9 +118,11 @@ If you are using `--buy` to purchase an item, you may send the optional `item|<_
 ```!ps --buy @{selected|character_id} @{target|character_id} 50gp item|Potion of Healing```
 
 ---
-**GM Only** Merchants that have already been setup with an inventory (see above) may display their inventory using the `--invlist` command followed by the character ID:
+**GM Only** Merchants that have already been setup with an inventory list (see instructions above) may display their inventory using the `--invlist` command followed by the character ID:
 
 ```!ps --invlist @{selected|character_id}```
+
+This provides the item name, price, and a link the player's can use to make the purchase.
 
 ### Notes
 

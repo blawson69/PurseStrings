@@ -21,12 +21,13 @@ Merchants are characters you have set up with PurseStrings that have items to se
 1. Edit the character's journal entry and go to the GM Notes field.
 2. The first line must be 'PurseStrings Inventory' and nothing else.
 3. Enter each item on its own line in the following manner:  
-    Item Name|price|quantity  
+    *Item Name|price|quantity*  
 If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  
-    Item Name|price|
+    *Item Name|price|*
 4. If you have multiple categories, you may add category headers by simply giving the category name its own line.
 5. Click the 'Save Changes' button.
-Here is an example GM Note for a small time merchant:
+
+Here is an example GM Note for a small town merchant:
 ```
 PurseStrings Inventory
 WEAPONS
@@ -39,7 +40,7 @@ Alchemist's Fire (flask)|50gp|2
 SERVICES
 Sword Sharpening|2gp|
 ```
-If the merchant buys an item from a player that is not in their inventory, it will be added to the bottom of the list. As is standard with these things, the purchase price will be double the amount it was bought for. Updates to inventory outside of purchases must be done by editing the GM Notes field again.
+If a merchant buys an item from a player that is not in their inventory, it will be added to the bottom of the list. As is standard with these things, the purchase price will be double the amount it was bought for. Updates to inventory outside of purchases must be done by editing the GM Notes field again.
 
 **Note:** The PurseStrings inventory data *must* be the only data in the GM Notes field!
 

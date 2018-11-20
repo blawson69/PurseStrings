@@ -150,7 +150,15 @@ If you are using `--buy` to purchase an item, you may send the optional `item|<_
 
 ```!ps --buy @{selected|character_id} @{target|character_id} 50gp item|Potion of Healing```
 
-The Inventory dialog for merchants (see below) outputs the proper code for all purchases. Players will just need to click the "Buy" link in the Inventory dialog to make a purchase.
+To indicate a purchase involving a merchant with an inventory, the optional `--inv` parameter must be passed along with an indicator of `+` or `-` which determines whether the item being purchased is should be added or removed from the merchant's inventory. For example, the command to purchase a Dagger from a merchant is as follows:
+
+```!ps --buy <buyer_id> <merchant_id> 50gp --inv- item|Dagger```
+
+However, if a player has found a Greatsword and wishes to sell it to the merchant, you would use this command:
+
+```!ps --buy <merchant_id> <seller_id> 37gp --inv+ item|Greatsword```
+
+The Inventory dialog for merchants (below) outputs the proper code for all purchases from the merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated.
 
 ---
 **GM Only** Merchants that have already been setup with an inventory list (see [instructions](#merchants-setup) above) may display their inventory using the `--invlist` command followed by the character ID:

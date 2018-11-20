@@ -22,7 +22,6 @@ Merchants are characters you have set up with PurseStrings that have items to se
 2. The first line must be "PurseStrings Inventory" and nothing else.
 3. Enter each item on its own line in the following manner:  
         *Item Name|price|quantity*  
-
 If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  
         *Item Name|price|*
 4. If you have multiple categories, you may add category headers by simply giving the category name its own line.

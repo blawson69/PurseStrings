@@ -70,11 +70,11 @@ If you wish to add a starting amount to the selected characters, you can optiona
 ```!ps --setup 50:20:0:10:0```
 
 ---
-**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command above, use the `--config` command to see a list of your Party Members and the value of your **drop** variable. The config menu will give a link to change your drop variable as well as a link to add Party Members.
+**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command above, use the `--config` command to see a list of your Party Members and the value of your **drop** and **showStock** variables. The config menu will give a link to change your these variables as well as a link to add Party Members.
 
 ```!ps --config```
 
-See below for more information about the **drop** variable and adding Party Members to the list.
+See below for more information about the **drop** and **showStock** variables and adding Party Members to the list.
 
 ---
 **GM Only** You may add characters to a Party Members list that persists between sessions. This will allow you to utilize the `--dist` command without needing player tokens selected. To do this, select the tokens representing the characters you wish to add and use the following command:
@@ -110,10 +110,18 @@ You may also send an optional `--whisper` command to make --show whisper the res
 The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
 
 ---
-**GM Only** The GM can change the way loot is distributed (via the `--dist` command above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random party member. The default value is "false." If false, the recipient of the leftover loot will be chosen from one of the Party Members.
+**GM Only** The GM can change the way loot is distributed (via the --dist command above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random party member. The default value is "false." If false, the recipient of the leftover loot will be chosen from one of the Party Members.
 
 ```!ps --drop true```
 ```!ps --drop false```
+
+---
+**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items or "false" to prevent numbers from showing. Default is "true."
+
+```!ps --stock true```
+```!ps --stock false```
+
+Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will not display any quantity regardless of the showStock setting.
 
 ---
 

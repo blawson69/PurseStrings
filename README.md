@@ -30,6 +30,8 @@ If you wish to have an item that is "infinitely available" such as ale or servic
 Here is an example GM Note for a small town merchant:
 ```
 PurseStrings Inventory
+SERVICES
+Sword Sharpening|2gp|
 WEAPONS
 Dagger|2gp|5
 Hand Axe|5gp|3
@@ -37,8 +39,6 @@ Shortsword|10gp|1
 ADVENTURING GEAR
 Potion of Healing|50gp|4
 Alchemist's Fire (flask)|50gp|2
-SERVICES
-Sword Sharpening|2gp|
 ```
 If a merchant buys an item from a player that is not in their inventory, it will be added to the bottom of the list. As is standard with these things, the purchase price will be double the amount it was bought for. Updates to inventory outside of purchases must be done by editing the GM Notes field again.
 

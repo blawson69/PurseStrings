@@ -19,11 +19,12 @@ You can add characters to a Party Members list which persists across sessions. T
 ### Merchants Setup
 Merchants are characters you have set up with PurseStrings that have items to sell. To create an inventory of items, follow the instructions below.
 1. Edit the character's journal entry and go to the GM Notes field.
-2. The first line must be 'PurseStrings Inventory' and nothing else.
+2. The first line must be "PurseStrings Inventory" and nothing else.
 3. Enter each item on its own line in the following manner:  
-    *Item Name|price|quantity*  
+        *Item Name|price|quantity*  
+
 If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  
-    *Item Name|price|*
+        *Item Name|price|*
 4. If you have multiple categories, you may add category headers by simply giving the category name its own line.
 5. Click the 'Save Changes' button.
 
@@ -104,22 +105,28 @@ You may also send an optional `--whisper` command to make --show whisper the res
 ---
 **GM Only** When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly among Party Members using `--dist` command. Coinage can be in any format above.
 
-```!ps --dist 156:280:0:666:0```
-```!ps --dist 146sp, 398gp```
+```
+!ps --dist 156:280:0:666:0
+!ps --dist 146sp, 398gp
+```
 
 The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected member of the group. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
 
 ---
 **GM Only** The GM can change the way loot is distributed (via the --dist command above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random party member. The default value is "false." If false, the recipient of the leftover loot will be chosen from one of the Party Members.
 
-```!ps --drop true```
-```!ps --drop false```
+```
+!ps --drop true
+!ps --drop false
+```
 
 ---
 **GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items or "false" to prevent numbers from showing. Default is "true."
 
-```!ps --stock true```
-```!ps --stock false```
+```
+!ps --stock true
+!ps --stock false
+```
 
 Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will not display any quantity regardless of the showStock setting.
 

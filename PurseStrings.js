@@ -20,6 +20,7 @@ var PurseStrings = PurseStrings || (function () {
         if (!_.has(state, 'PURSESTRINGS')) state['PURSESTRINGS'] = state['PURSESTRINGS'] || {};
         if (typeof state['PURSESTRINGS'].partyMembers == 'undefined') state['PURSESTRINGS'].partyMembers = [];
         if (typeof state['PURSESTRINGS'].dropChange == 'undefined') state['PURSESTRINGS'].dropChange = false;
+        if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
         log('--> PurseStrings v' + version + ' <-- Initialized');
     },
 
@@ -52,7 +53,12 @@ var PurseStrings = PurseStrings || (function () {
 						break;
                     case '--drop':
   						if (playerIsGM(msg.playerid)) {
-  							commandDrop(msg);
+  							commandDrop(msg.content);
+  						}
+  						break;
+                    case '--stock':
+  						if (playerIsGM(msg.playerid)) {
+  							commandShowStock(msg.content);
   						}
   						break;
                     case '--party':
@@ -62,12 +68,12 @@ var PurseStrings = PurseStrings || (function () {
   						break;
                     case '--config':
   						if (playerIsGM(msg.playerid)) {
-  							commandConfig(msg);
+  							commandConfig(msg.content);
   						}
   						break;
                     case '--invlist':
   						if (playerIsGM(msg.playerid)) {
-  							commandInventory(msg);
+  							commandInventory(msg.content);
   						}
   						break;
 					case '--buy':
@@ -173,7 +179,7 @@ var PurseStrings = PurseStrings || (function () {
     commandDrop = function (msg) {
         // Set the cross-session default falue of dropChange
         var regex = /true|yes|sure|yep/i,
-        cmdString = msg.content.toString();
+        cmdString = msg.toString();
 
         if (regex.test(cmdString)) {
             state['PURSESTRINGS'].dropChange = true;
@@ -184,14 +190,34 @@ var PurseStrings = PurseStrings || (function () {
         commandConfig(msg);
     },
 
+    commandShowStock = function (msg) {
+        // Set the cross-session default falue of showStock
+        var regex = /true|yes|sure|yep/i,
+        cmdString = msg.toString();
+
+        if (regex.test(cmdString)) {
+            state['PURSESTRINGS'].showStock = true;
+        } else {
+            state['PURSESTRINGS'].showStock = false;
+        }
+
+        commandConfig(msg);
+    },
+
     commandConfig = function (msg) {
         // Config dialog with links to make changes
-        var message = 'Leftover loot currently is set to be ';
-
+        var message = '<b>Leftover loot</b> is currently set to be ';
         if (state['PURSESTRINGS'].dropChange) {
             message += 'dropped for non-random distribution. <a href="!ps --drop false">Change</a>';
         } else {
             message += 'given to a random Party Member. <a href="!ps --drop true">Change</a>';
+        }
+
+        message += '<br><br><b>Merchant stock</b> currently is set to be ';
+        if (state['PURSESTRINGS'].showStock) {
+            message += 'shown to players, with "out of stock" items being labeled as such. <a href="!ps --stock false">Change</a>';
+        } else {
+            message += 'hidden from players, with "out of stock" items not being displayed in the list. <a href="!ps --stock true">Change</a>';
         }
 
         message += '<br><br><b style="color:#591209;">PARTY MEMBERS</b><br>';
@@ -203,7 +229,7 @@ var PurseStrings = PurseStrings || (function () {
             });
             message += "</ul>";
         } else {
-            message += '<b>Warning:</b> There are no characters in the Party Members list! ';
+            message += 'There are no characters in the Party Members list! ';
         }
         message += 'To add one or more characters, select their token(s) and <a href="!ps --party">click here</a>.';
 
@@ -279,7 +305,6 @@ var PurseStrings = PurseStrings || (function () {
 		if (commands[2] && commands[2] !== '') buyer = getObj('character', commands[2]);
 		if (commands[3] && commands[3] !== '') seller = getObj('character', commands[3]);
         item = getItemDesc(msg);
-        item = item.length > 0 ? ' for ' + item : item;
 
 		if (buyer && seller) {
 			if (hasPurse(seller.get('id'))) {
@@ -287,10 +312,17 @@ var PurseStrings = PurseStrings || (function () {
 				if (purchased) {
 					var sold = changePurse(msg.content, seller.get('id'), 'add');
 					if (sold) {
-						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + prettyCoins(parseCoins(msg.content), true) + ' to ' + seller.get('name') + item + '.', msg.who, false);
+                        var paid = prettyCoins(parseCoins(msg.content), true);
+                        if (commands[5] && commands[5].match(/\-\-inv[\+\-]/i) !== null) {
+                            var add = (commands[5] == '--inv+');
+                            var merchant_id = (commands[5] == '--inv+') ? buyer.get('id') : seller.get('id');
+                            updateInventory(merchant_id, item, paid, add);
+                        }
+                        item = item.length > 0 ? ' for one ' + item : item;
+						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + paid + ' to ' + seller.get('name') + item + '.', msg.who, true);
 					}
 				} else {
-					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', msg.who, false);
+					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', msg.who, true);
 				}
 			} else {
 				showDialog('Transaction Error', buyer.get('name'), 'You must have a valid seller to do business with!', msg.who, false);
@@ -307,8 +339,8 @@ var PurseStrings = PurseStrings || (function () {
         numParty = partyMembers.length;
 
         if(msg.selected && msg.selected.length > 0) {
-            // This is where we'll include selected tokens with the Party
-            sendChat('PurseStrings', '/w GM You also had ' + msg.selected.length + ' tokens selected.', null, {noarchive:true});
+            // This is where we'll include selected tokens with the Party... maybe
+            //sendChat('PurseStrings', '/w GM You also had ' + msg.selected.length + ' tokens selected.', null, {noarchive:true});
         }
 
 		if (loot && numParty > 0) {
@@ -376,7 +408,7 @@ var PurseStrings = PurseStrings || (function () {
 
     commandInventory = function (msg) {
         //Shows the inventory for a merchant character
-        var merchant, char_id = '', inventory = '', commands = msg.content.split(/\s+/);
+        var merchant, char_id = '', inventory = '', commands = msg.split(/\s+/);
 		if (commands[2] && commands[2] !== '') {
             char_id = commands[2];
             merchant = getObj('character', char_id);
@@ -390,15 +422,24 @@ var PurseStrings = PurseStrings || (function () {
                     _.each(notes, function(item) {
                         if (item.search(/\|/) > 0) {
                             let a = item.split('|');
-                            let safe = a[0].replace(/\(/, '&lpar;').replace(/\)/, '&rpar;');
-                            inventory += '{{' + a[0] + '=' + a[1] +
-                            ' [Buy](!ps --buy &#64;&lbrace;selected|character_id&rbrace; ' + char_id + ' ' +
-                            a[1] + ' --inv item|' + safe + ') }} ';
+                            if (state['PURSESTRINGS'].showStock) {
+                                if (a[2] !== 0 && a[2] !== '0') {
+                                    var quant = (a[2] == -1 || a[2] == '') ? '' : ' (' + a[2] + ' available)'
+                                    inventory += '{{' + a[0] + '=' + a[1] + quant + ' <a href="!ps --buy &#64;&lbrace;selected|character_id&rbrace; ' + char_id + ' ' + a[1] + ' --inv- item|' + a[0] + '">Buy</a> }} ';
+                                } else {
+                                    inventory += '{{' + a[0] + '=' + a[1] + ' (out of stock) }} ';
+                                }
+                            } else {
+                                if (a[2] !== 0 && a[2] !== '0') {
+                                    inventory += '{{' + a[0] + '=' + a[1] + ' <a href="!ps --buy &#64;&lbrace;selected|character_id&rbrace; ' + char_id + ' ' + a[1] + ' --inv- item|' + a[0] + '">Buy</a> }} ';
+                                }
+                            }
                         } else {
                             inventory += '{{' + item.trim() + '=}} ';
                         }
                     });
-                    sendChat(merchant.get('name'), inventory);
+                    if (whispers(msg)) sendChat(merchant.get('name'), '/w GM ' + inventory);
+                    else sendChat(merchant.get('name'), inventory);
                 } else {
                     sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
                 }
@@ -407,6 +448,51 @@ var PurseStrings = PurseStrings || (function () {
             sendChat('PurseStrings', '/w GM Merchant character is not set up for PurseStrings!', null, {noarchive:true});
         }
         return inventory;
+    },
+
+    updateInventory = function (char_id, desc, price, add = false) {
+        //Updates the inventory for a merchant character
+        var merchant = getObj('character', char_id);
+        if (merchant && hasPurse(char_id)) {
+            merchant.get('gmnotes', function (gmnotes) {
+                var newGMnotes = '';
+                var notes = decodeEditorText(gmnotes, {asArray:true});
+                if (notes && notes[0].match(/^PurseStrings Inventory$/i) !== null) {
+                    var found = _.find(notes, function(note) {let d = note.split('|'); return d[0] == desc});
+                    if (found) {
+                        _.each(notes, function(item) {
+                            if (item.search(/\|/) > 0) {
+                                var a = item.split('|');
+                                var quant = parseInt(a[2]);
+                                if (a[0] === desc && !isNaN(quant)) {
+                                    quant = (add) ? quant + 1 : quant - 1;
+                                    if (quant < 0) quant = 0;
+                                    newGMnotes += '<p>' + desc + '|' + a[1] + '|' + quant + '</p>';
+                                } else {
+                                     newGMnotes += '<p>' + item + '</p>';
+                                }
+                            } else {
+                                newGMnotes += '<p>' + item + '</p>';
+                            }
+                        });
+                    } else {
+                        _.each(notes, function(item) {
+                            if (typeof item !== 'undefined') newGMnotes += '<p>' + item + '</p>';
+                        });
+
+                        var num = parseInt(price), denom = price.replace(/\d+/, '');
+                        var newItem = desc + '|' + (num * 2) + denom + '|1';
+                        newGMnotes += '<p>' + newItem + '</p>';
+                    }
+                    merchant.set('gmnotes', newGMnotes);
+                } else {
+                    sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
+                }
+            });
+            commandInventory('!ps --invlist ' + char_id);
+        } else {
+            sendChat('PurseStrings', '/w GM Merchant character is not set up for PurseStrings!', null, {noarchive:true});
+        }
     },
 
 	parseCoins = function (cmds) {

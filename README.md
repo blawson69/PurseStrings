@@ -2,6 +2,8 @@
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped). It adds a "Purse" to a character for storing coinage, and will add/subtract appropriately when collecting loot, paying for goods/services, etc. (See the [Notes](#notes) below for more info.)
 
+PurseStrings now also manages a rudimentary inventory system, allowing a dynamic merchant experience. You can set up characters/NPCs with an inventory that is updated with every purchase.
+
 ### Coinage
 Coinage can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest with zeros for placeholders.
 
@@ -19,7 +21,9 @@ Merchants are characters you have set up with PurseStrings that have items to se
 1. Edit the character's journal entry and go to the GM Notes field.
 2. The first line must be 'PurseStrings Inventory' and nothing else.
 3. Enter each item on its own line in the following manner:  
-    Item Name|price|quantity
+    Item Name|price|quantity  
+If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  
+    Item Name|price|
 4. If you have multiple categories, you may add category headers by simply giving the category name its own line.
 5. Click the 'Save Changes' button.
 Here is an example GM Note for a small time merchant:
@@ -32,10 +36,12 @@ Shortsword|10gp|1
 ADVENTURING GEAR
 Potion of Healing|50gp|4
 Alchemist's Fire (flask)|50gp|2
-Acid (vial)|25gp|1
-Antitoxin (vial)|75gp|1
+SERVICES
+Sword Sharpening|2gp|
 ```
-The PurseStrings inventory data *must* be the only data in the GM Notes field.
+If the merchant buys an item from a player that is not in their inventory, it will be added to the bottom of the list. As is standard with these things, the purchase price will be double the amount it was bought for. Updates to inventory outside of purchases must be done by editing the GM Notes field again.
+
+**Note:** The PurseStrings inventory data *must* be the only data in the GM Notes field!
 
 ### Syntax
 
@@ -117,7 +123,7 @@ The leftover coinage that remains when it cannot be evenly divided can either be
 Equivalences are used when determining what coins are removed. For instance, if the Purse has 50sp and 5gp and the amount to subtract is 6gp, the Purse will contain 40sp and 0gp once the subtraction is complete. A Purse with 2cp and 7sp can subtract 5cp and the script will borrow from larger denominations to make up the remainder, in this case leaving the Purse at 7cp and 6sp.
 
 ---
-Characters can also exchange money. This can be either the purchase of goods & services from a NPC or simply giving money to another player. PurseStrings doesn't care about inventory, it just handles the monetary transaction.
+Characters can also exchange money. This can be either the purchase of goods & services from a NPC or simply giving money to another player. PurseStrings handles the monetary transaction as well as the inventory for a character/NPC that has been set up as a Merchant ([see above](#merchants-setup)).
 
 To exchange money, you use the `--buy` parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
 
@@ -129,12 +135,14 @@ If you are using `--buy` to purchase an item, you may send the optional `item|<_
 
 ```!ps --buy @{selected|character_id} @{target|character_id} 50gp item|Potion of Healing```
 
+The Inventory dialog for merchants (see below) outputs the proper code for all purchases. Players will just need to click the "Buy" link in the Inventory dialog to make a purchase.
+
 ---
 **GM Only** Merchants that have already been setup with an inventory list (see [instructions](#merchants-setup) above) may display their inventory using the `--invlist` command followed by the character ID:
 
 ```!ps --invlist @{selected|character_id}```
 
-This provides the item name, price, and a link the player's can use to make the purchase.
+This generates a dialog with the merchant's inventory and provides the item name, price, and a link the player's can use to make the purchase.
 
 ### Notes
 

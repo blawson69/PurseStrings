@@ -126,11 +126,7 @@ var PurseStrings = PurseStrings || (function () {
 						});
 
                         if (!hasEquip(char_id)) {
-                            var RepID = addCoinPurse(char_id);
-                            var purseID = createObj('attribute',{
-                                characterid: char_id,
-                                name: 'pursestrings_purse_id',
-                                current: RepID
+                            addCoinPurse(char_id);
                             });
                         }
                         addShowPurse(char_id);
@@ -140,6 +136,7 @@ var PurseStrings = PurseStrings || (function () {
 						if (coins) {
 							var initpurse = changePurse(msg.content, char_id, 'add');
                             if (initpurse) {
+                                updateCoinWeight(char_id);
                                 message += ' Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
                             }
 						}
@@ -961,7 +958,11 @@ var PurseStrings = PurseStrings || (function () {
         });
         setAttrs(char_id, data);
 
-        return RowID;
+        var purseID = createObj('attribute', {
+            characterid: char_id,
+            name: 'pursestrings_purse_id',
+            current: RowID
+        });
     },
 
     updateCoinWeight = function (char_id) {
@@ -1094,12 +1095,7 @@ var PurseStrings = PurseStrings || (function () {
         _.each(chars, function(char) {
             var char_id = char.get('id');
             if (hasPurse(char_id) && !hasEquip(char_id)) {
-                var RepID = addCoinPurse(char_id);
-                var purseID = createObj('attribute',{
-                    characterid: char_id,
-                    name: 'pursestrings_purse_id',
-                    current: RepID
-                });
+                addCoinPurse(char_id);
                 updateCoinWeight(char_id);
                 count++;
             }

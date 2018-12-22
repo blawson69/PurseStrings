@@ -49,15 +49,16 @@ If a merchant buys an item from a player that is not in their inventory, it will
 ## Parameters:
 * **[--setup](#--setup)**
 * **[--config](#--config)**
-* **--party**
-* **--show**
-* **--add** <_coinage_>
-* **--dist** <_coinage_>
-* **--drop**
-* **--subt** <_coinage_>
-* **--give** <_giver_id_> <_receiver_id_> <_coinage_>
-* **--buy** <_buyer_id_> <_seller_id_> <_coinage_>
-* **--invlist** <_merchant_id_>
+* **[--party](#--party)**
+* **[--show](#--show)**
+* **[--add](#--add)** <_coinage_>
+* **[--dist](#--dist)** <_coinage_>
+* **[--drop](#--drop)**
+* **[--stock](#--stock)**
+* **[--subt](#--subt)** <_coinage_>
+* **[--give](#--give)** <_giver_id_> <_receiver_id_> <_coinage_>
+* **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_>
+* **[--invlist](#--invlist)** <_merchant_id_>
 
 ---
 ### --setup
@@ -75,7 +76,7 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ```!ps --config```
 
-See below for more information about the **drop** and **showStock** variables and adding Party Members to the list.
+See below for more information about the **[Drop](#--drop)** and **[showStock](#--stock)** variables and adding Party Members to the list.
 
 ---
 ### --party
@@ -116,11 +117,11 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 !ps --dist 146sp, 398gp
 ```
 
-The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a randomly selected Party Member. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
+The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
 
 ---
 ### --drop
-**GM Only** The GM can change the way loot is distributed (during the use of `--dist` above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random party member. The default value is "false." If false, the recipient of the leftover loot will be chosen from one of the Party Members.
+**GM Only** The GM can change the way loot is distributed (during the use of `--dist` above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random Party Member. The default value is "false."
 
 ```
 !ps --drop true
@@ -129,7 +130,7 @@ The leftover coinage that remains when it cannot be evenly divided can either be
 
 ---
 ### --stock
-**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items or "false" to prevent numbers from showing. Default is "true." This parameter applies to all merchants in the game.
+**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game.
 
 ```
 !ps --stock true
@@ -150,7 +151,7 @@ Equivalences are used when determining what coins are removed. For instance, if 
 ### --give
 Characters can exchange money between themselves. The first ID passed is that of the character giving the money, the second is that of the recipient character. Coinage is sent as the last parameter.
 
-```!ps --give <_giver_id_> <_receiver_id_> 50gp```
+```!ps --give <giver_id> <receiver_id> 50gp```
 
 As with the `--subt` parameter, the exchange will fail if the amount of the coinage is more than what the giver has in their Purse, and equivalences will be used for making change.
 
@@ -160,23 +161,23 @@ Characters can also pay of goods & services as well. PurseStrings handles the mo
 
 To exchange money for an item or service, you use the `--buy` parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
 
-```!ps --buy <_buyer_id_> <_seller_id_> 50gp```
+```!ps --buy <buyer_id> <seller_id> 50gp```
 
 As with the `--subt` parameter, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse, and equivalences will be used for making change.
 
-If you are using `--buy` to purchase an item, you may send the optional `item|<_item_description_>` parameter as a way to better describe the transaction. This parameter *must come last* and will be included in the transaction dialog.
+If you are using `--buy` to purchase an item, you may send the optional `item|<item_description>` parameter as a way to better describe the transaction. This parameter *must come last* and will be included in the transaction dialog. The item description is optional except for when selling to a Merchant.
 
-```!ps --buy <_buyer_id_> <_seller_id_> 50gp item|Potion of Healing```
+```!ps --buy <buyer_id> <seller_id> 50gp item|Potion of Healing```
 
-To indicate a purchase involving a Merchant with an inventory, the optional `--inv` parameter must be passed along with an indicator of `+` or `-` which determines whether the item being purchased is should be added or removed from the Merchant's inventory. For example, the command to purchase a Dagger from a Merchant is as follows:
+To indicate a purchase involving a Merchant with an inventory, the `--inv` parameter must be passed along with an indicator of `+` or `-` which determines whether the item being purchased should be added or removed from the Merchant's inventory. For example, the command to purchase a Dagger from a Merchant is as follows:
 
-```!ps --buy <_buyer_id_> <_merchant_id_> 50gp --inv- item|Dagger```
+```!ps --buy <buyer_id> <merchant_id> 50gp --inv- item|Dagger```
 
 However, if a player has found a Greatsword and wishes to sell it to the Merchant, you would use this command:
 
-```!ps --buy <_merchant_id_> <_seller_id_> 37gp --inv+ item|Greatsword```
+```!ps --buy <merchant_id> <seller_id> 37gp --inv+ item|Greatsword```
 
-The Inventory dialog for Merchants (below) outputs the proper code for all purchases from the Merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated.
+The Inventory dialog for Merchants (below) outputs the proper code for all purchases from a Merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated.
 
 ---
 ### --invlist

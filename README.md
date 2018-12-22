@@ -49,12 +49,12 @@ If a merchant buys an item from a player that is not in their inventory, it will
 ## Parameters:
 * **[--setup](#--setup)**
 * **[--config](#--config)**
+* **[--drop](#--drop)**
+* **[--stock](#--stock)**
 * **[--party](#--party)**
 * **[--show](#--show)**
 * **[--add](#--add)** <_coinage_>
 * **[--dist](#--dist)** <_coinage_>
-* **[--drop](#--drop)**
-* **[--stock](#--stock)**
 * **[--subt](#--subt)** <_coinage_>
 * **[--give](#--give)** <_giver_id_> <_receiver_id_> <_coinage_>
 * **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_>
@@ -77,6 +77,26 @@ If you wish to add a starting amount to the selected characters, you can optiona
 ```!ps --config```
 
 See below for more information about the **[Drop](#--drop)** and **[showStock](#--stock)** variables and adding Party Members to the list.
+
+---
+### --drop
+**GM Only** The GM can change the way loot is distributed (during the use of `--dist` above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random Party Member. The default value is "false." An option to change this setting is included in the `--config` dialog.
+
+```
+!ps --drop true
+!ps --drop false
+```
+
+---
+### --stock
+**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game. An option to change this setting is included in the `--config` dialog.
+
+```
+!ps --stock true
+!ps --stock false
+```
+
+Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will not display any quantity regardless of the showStock setting.
 
 ---
 ### --party
@@ -118,26 +138,6 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 ```
 
 The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
-
----
-### --drop
-**GM Only** The GM can change the way loot is distributed (during the use of `--dist` above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random Party Member. The default value is "false."
-
-```
-!ps --drop true
-!ps --drop false
-```
-
----
-### --stock
-**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game.
-
-```
-!ps --stock true
-!ps --stock false
-```
-
-Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will not display any quantity regardless of the showStock setting.
 
 ---
 ### --subt

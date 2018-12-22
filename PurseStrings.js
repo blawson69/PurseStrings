@@ -127,7 +127,6 @@ var PurseStrings = PurseStrings || (function () {
 
                         if (!hasEquip(char_id)) {
                             addCoinPurse(char_id);
-                            });
                         }
                         addShowPurse(char_id);
 
@@ -966,7 +965,7 @@ var PurseStrings = PurseStrings || (function () {
     },
 
     updateCoinWeight = function (char_id) {
-        // Update the CoinPurse equpment item with the weight of all coins
+        // Update the CoinPurse equipment item with the total weight of all coins
         var purseID = findObjs({type: 'attribute', characterid: char_id, name: 'pursestrings_purse_id'}, {caseInsensitive: true})[0];
         if (purseID) {
             var coins = getPurse(char_id);

@@ -44,9 +44,10 @@ If a Merchant buys an item from a player that is not already in their inventory,
 
 ## Syntax
 
-```!ps <command> <optional-parameters>```
+```!ps <command>```
 
 ## Commands:
+* **[--help](#--help)**
 * **[--setup](#--setup)**
 * **[--config](#--config)**
 * **[--drop](#--drop)**
@@ -59,6 +60,12 @@ If a Merchant buys an item from a player that is not already in their inventory,
 * **[--give](#--give)** <_giver_id_> <_receiver_id_> <_coinage_>
 * **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_>
 * **[--invlist](#--invlist)** <_merchant_id_>
+
+---
+### --help
+Whispers a PurseStrings help dialog in the chat window. It gives relative commands depending on whether the player is GM. The GM will also get a link to display the [Config Menu](#--config).
+
+```!ps --help```
 
 ---
 ### --setup

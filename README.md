@@ -16,7 +16,7 @@ You can add characters to a Party Members list which persists across sessions. T
 
 ## Merchant Setup
 Merchants are characters you have set up with PurseStrings that have items or services to sell. To create an inventory, follow the instructions below.
-1. Edit the character's journal entry and go to the GM Notes field.
+1. Edit the Merchant character's journal entry and go to the GM Notes field.
 2. The first line must be "PurseStrings Inventory" and nothing else.
 3. Enter each item on its own line in the following manner:  
     *Item Name|price|quantity*  
@@ -25,7 +25,7 @@ If you wish to have an item that is "infinitely available" such as ale or servic
 4. If you have multiple categories, you may add category headers by simply giving the category name its own line.
 5. Click the 'Save Changes' button.
 
-Here is an example GM Note for a small town merchant:
+Here is an example GM Note for a small town blacksmith Merchant:
 ```
 PurseStrings Inventory
 SERVICES
@@ -38,7 +38,7 @@ ADVENTURING GEAR
 Potion of Healing|50gp|4
 Alchemist's Fire (flask)|50gp|2
 ```
-If a merchant buys an item from a player that is not in their inventory, it will be added to the bottom of the list. As is standard with these things, the purchase price will be double the amount it was bought for. Updates to inventory outside of purchases must be done by editing the GM Notes field again.
+If a Merchant buys an item from a player that is not already in their inventory, it will be added to the bottom of the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price will be double the amount at which it was purchased. Updates to inventory outside of purchases must be done by editing the GM Notes field.
 
 **Note:** The PurseStrings inventory data *must* be the only data in the GM Notes field!
 
@@ -66,13 +66,13 @@ If a merchant buys an item from a player that is not in their inventory, it will
 
 ```!ps --setup```
 
-If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to each selected character. The following adds 50cp, 20sp, and 10gp to each character selected:
+If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to every selected character. The following adds 50cp, 20sp, and 10gp to each selected character:
 
 ```!ps --setup 50:20:0:10:0```
 
 ---
 ### --config
-**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command above, use the `--config` command to see a list of your Party Members and the value of your **drop** and **showStock** variables. The config menu will give a link to change these variables as well as a link to add Party Members.
+**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command [above](#--setup), use the `--config` command to see a list of your Party Members and the value of your **drop** and **showStock** variables. The config menu will give a link to change these variables as well as a link to add Party Members.
 
 ```!ps --config```
 
@@ -80,7 +80,7 @@ See below for more information about the **[Drop](#--drop)** and **[showStock](#
 
 ---
 ### --drop
-**GM Only** The GM can change the way loot is distributed (during the use of `--dist` above) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped or "false" to give it to a random Party Member. The default value is "false." An option to change this setting is included in the `--config` dialog.
+**GM Only** The GM can change the way loot is distributed ([below](#--dist)) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped so the players can decide amongst themselves who should receive the remainder, or "false" to give it to a random Party Member. The default value is "false." An option to change this setting is included in the `--config` dialog.
 
 ```
 !ps --drop true
@@ -96,7 +96,7 @@ See below for more information about the **[Drop](#--drop)** and **[showStock](#
 !ps --stock false
 ```
 
-Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will not display any quantity regardless of the showStock setting.
+Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will never display any quantity regardless of the showStock setting.
 
 ---
 ### --party
@@ -131,7 +131,7 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 !ps --dist 146sp, 398gp
 ```
 
-The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
+The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. To configure this there is a `--drop` command ([above](#--drop)) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
 
 ---
 ### --add
@@ -163,7 +163,7 @@ To exchange money for an item or service, you use the `--buy` parameter along wi
 
 ```!ps --buy <buyer_id> <seller_id> 50gp```
 
-As with the `--subt` parameter, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse, and equivalences will be used for making change.
+As with the `--subt` command, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse, and equivalences will be used for making change.
 
 If you are using `--buy` to purchase an item, you may send the optional `item|<item_description>` parameter as a way to better describe the transaction. This parameter *must come last* and will be included in the transaction dialog. The item description is optional except for when selling to a Merchant.
 

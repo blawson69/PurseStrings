@@ -44,9 +44,9 @@ If a Merchant buys an item from a player that is not already in their inventory,
 
 ## Syntax
 
-```!ps <parms>```
+```!ps <command> <optional-parameters>```
 
-## Parameters:
+## Commands:
 * **[--setup](#--setup)**
 * **[--config](#--config)**
 * **[--drop](#--drop)**

@@ -23,8 +23,9 @@ var PurseStrings = PurseStrings || (function () {
         log('--> PurseStrings v' + version + ' <-- Initialized');
 
         if (upgradeNeeded()) {
-            sendChat('PurseStrings', '/w GM &{template:5e-shaped} {{title=Upgrade Needed}} {{content=One or more of your PurseStrings-enabled characters '
-            + 'require an upgrade from the previous version. <a href="!ps --upgrade">Click here to perform the upgrade</a>.}}', null, {noarchive:true});
+            var upgradeNotice = 'One or more of your PurseStrings-enabled characters require an upgrade from '
+            + 'the previous version. <a href="!ps --upgrade">Click here to perform the upgrade</a>.';
+            adminDialog('Upgrade Needed', upgradeNotice);
         }
     },
 

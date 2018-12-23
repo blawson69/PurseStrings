@@ -95,10 +95,10 @@ var PurseStrings = PurseStrings || (function () {
 						break;
                     case '--help':
                     default:
-                        commandHelp();
+                        commandHelp(msg);
 				}
 			} else {
-				commandHelp();
+				commandHelp(msg);
 			}
 		}
     },
@@ -192,20 +192,18 @@ var PurseStrings = PurseStrings || (function () {
         partyUpdated = true;
     },
 
-    commandHelp = function () {
+    commandHelp = function (msg) {
         // Help dialog with list of commands and a link to the Config Menu
         var message;
         if (playerIsGM(msg.playerid)) {
             message = '<b>!ps --help</b><br>Sends this Help dialog to the chat window.<br><br>'
+            + '<b>!ps --setup</b><br>Set up for use with PurseStrings. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --setup 15gp</b><br>Set up and add 15gp startup coins. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --show</b><br>Show Purse in the chat window. Requires selected token(s).<br><br>'
+            + '<b>!ps --show --whisper</b><br>Whisper Purse in the chat window. Requires selected token(s).<br><br>'
             + '<b>!ps --dist 500cp 300sp 100gp</b><br>Distributes 500cp, 300sp, and 100gp evenly between Party Members. <i>GM only</i>.<br><br>'
-            + '<br>The following commands require one or more tokens representing a character to be selected:<br><br>'
-            + '<b>!ps --setup</b><br>Set up for use with PurseStrings. <i>GM only</i>.<br><br>'
-            + '<b>!ps --setup 15gp</b><br>Set up and add 15gp startup coins. <i>GM only</i>.<br><br>'
-            + '<b>!ps --show</b><br>Show Purse in the chat window.<br><br>'
-            + '<b>!ps --show --whisper</b><br>Whisper Purse in the chat window.<br><br>'
-            + '<b>!ps --add 15gp</b><br>Add 15gp to the Purse. <i>GM only</i>.<br><br>'
-            + '<b>!ps --subt 15gp</b><br>Remove 15gp from the Purse. <i>GM only</i>.<br><br>'
-            + '<br>The following commands do not require selected tokens, but do require one or more character IDs:<br><br>'
+            + '<b>!ps --add 15gp</b><br>Add 15gp to the Purse. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --subt 15gp</b><br>Remove 15gp from the Purse. Requires selected token(s). <i>GM only</i>.<br><br>'
             + '<b>!ps --give &#60;giver_id&#62; &#60;receiver_id&#62; 15gp</b><br>Giver gives 15gp to Receiver.'
             + '<b>!ps --buy &#60;buyer_id&#62; &#60;seller_id&#62; 15gp</b><br>Exchanges 15gp from buyer to seller.<br><br>'
             + '<b>!ps --buy &#60;buyer_id&#62; &#60;merchant_id&#62; 15gp --inv- item|Dagger</b><br>Buys a Dagger from Merchant for 15gp.<br><br>'
@@ -215,12 +213,10 @@ var PurseStrings = PurseStrings || (function () {
             adminDialog('PurseStrings Help', message);
         } else {
             message = '<b>!ps --help</b><br>Sends this Help dialog to the chat window.<br><br>'
-            + '<br>The following commands require a character token to be selected:<br><br>'
-            + '<b>!ps --show</b><br>Show your Purse in the chat window.<br><br>'
-            + '<b>!ps --show --whisper</b><br>Whisper your Purse to you in the chat window.<br><br>'
-            + '<br>The following command does not require a selected token, but does require character IDs:<br><br>'
+            + '<b>!ps --show</b><br>Show your Purse in the chat window. Requires selected token(s).<br><br>'
+            + '<b>!ps --show --whisper</b><br>Whisper your Purse to you in the chat window. Requires selected token(s).<br><br>'
             + '<b>!ps --give &#60;giver_id&#62; &#60;receiver_id&#62; 15gp</b><br>Giver gives 15gp to Receiver.';
-            showDialog('PurseStrings Help', message, msg.who, true);
+            showDialog('PurseStrings Help', '', message, msg.who, true);
         }
     },
 
@@ -498,7 +494,7 @@ var PurseStrings = PurseStrings || (function () {
                         }
                     });
                     if (whispers(msg)) sendChat(merchant.get('name'), '/w GM ' + inventory);
-                    else sendChat(merchant.get('name'), inventory);
+                    else sendChat('character|' + char_id, inventory);
                 } else {
                     sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
                 }

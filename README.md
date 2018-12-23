@@ -79,11 +79,9 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ---
 ### --config
-**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command [above](#--setup), use the `--config` command to see a list of your Party Members and the value of your **drop** and **showStock** variables. The config menu will give a link to change these variables as well as a link to add Party Members.
+**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command [above](#--setup), use the `--config` command to see a list of your [Party Members](#--party) and the value of your **[Drop](#--drop)** and **[showStock](#--stock)** variables. The config menu will give a link to change these variables as well as a link to add Party Members.
 
 ```!ps --config```
-
-See below for more information about the **[Drop](#--drop)** and **[showStock](#--stock)** variables and adding Party Members to the list.
 
 ---
 ### --drop

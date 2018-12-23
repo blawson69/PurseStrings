@@ -53,8 +53,8 @@ If a merchant buys an item from a player that is not in their inventory, it will
 * **[--stock](#--stock)**
 * **[--party](#--party)**
 * **[--show](#--show)**
-* **[--add](#--add)** <_coinage_>
 * **[--dist](#--dist)** <_coinage_>
+* **[--add](#--add)** <_coinage_>
 * **[--subt](#--subt)** <_coinage_>
 * **[--give](#--give)** <_giver_id_> <_receiver_id_> <_coinage_>
 * **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_>
@@ -123,12 +123,6 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 ```!ps --show --whisper```
 
 ---
-### --add
-**GM Only** To add coinage to a character(s) Purse, simply pass it with the `--add` parameter. The following adds 10gp to each selected character:
-
-```!ps --add 10gp```
-
----
 ### --dist
 **GM Only** When the players have discovered treasure, you may use PurseStrings to distribute the coinage portion of the loot evenly among Party Members using `--dist` command. Coinage can be in any format above.
 
@@ -138,6 +132,12 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 ```
 
 The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. To configure this there is a `--drop` command (below) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
+
+---
+### --add
+**GM Only** To add coinage to a character(s) Purse, simply pass it with the `--add` parameter. The following adds 10gp to each selected character:
+
+```!ps --add 10gp```
 
 ---
 ### --subt

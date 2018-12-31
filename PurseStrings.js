@@ -14,6 +14,7 @@ var PurseStrings = PurseStrings || (function () {
 
     var version = '3.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
+        debugMode = false,
 
     checkInstall = function () {
         if (!_.has(state, 'PURSESTRINGS')) state['PURSESTRINGS'] = state['PURSESTRINGS'] || {};
@@ -21,6 +22,10 @@ var PurseStrings = PurseStrings || (function () {
         if (typeof state['PURSESTRINGS'].dropChange == 'undefined') state['PURSESTRINGS'].dropChange = false;
         if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
         log('--> PurseStrings v' + version + ' <-- Initialized');
+
+        if (debugMode) {
+            adminDialog('DEBUG MODE', 'PurseStrings loaded.');
+        }
 
         if (upgradeNeeded()) {
             var upgradeNotice = 'One or more of your PurseStrings-enabled characters require an upgrade from '
@@ -336,7 +341,7 @@ var PurseStrings = PurseStrings || (function () {
 
 					// Count coins to determine total weight
 					var total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
-					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(2) + ' lbs.';
+					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(0) + ' lbs.';
 
 					showDialog('Purse Contents', character.get('name'), content, msg.who, whispers(msg.content));
 				}
@@ -976,14 +981,24 @@ var PurseStrings = PurseStrings || (function () {
         // Update the CoinPurse equipment item with the total weight of all coins
         var purseID = findObjs({type: 'attribute', characterid: char_id, name: 'pursestrings_purse_id'}, {caseInsensitive: true})[0];
         if (purseID) {
+            var pID = purseID.get('current');
             var coins = getPurse(char_id);
-            var totalWeight = ((coins['cp'] + coins['sp'] + coins['ep'] + coins['gp'] + coins['pp']) * 0.02).toFixed(2);
+            var totalWeight = ((coins['cp'] + coins['sp'] + coins['ep'] + coins['gp'] + coins['pp']) * 0.02).toFixed(0);
 
-            var coinPurse = findObjs({type: 'attribute', characterid: char_id, name: 'repeating_equipment_' + purseID.get('current') + '_weight'})[0];
+            var coinPurse = findObjs({type: 'attribute', characterid: char_id, name: 'repeating_equipment_' + pID + '_weight'})[0];
             if (coinPurse) {
                 coinPurse.setWithWorker('current', totalWeight);
             } else {
-                sendChat('PurseStrings', '/w GM Could not find "repeating_equipment_' + purseID.get('current') + '_weight!"', null, {noarchive:true});
+                sendChat('PurseStrings', '/w GM Could not find "repeating_equipment_' + pID + '_weight!"', null, {noarchive:true});
+            }
+
+            // Trigger the sheet workers to recalculate the total weight of all equipment
+            var coinPursePU = findObjs({type: 'attribute', characterid: char_id, name: 'repeating_equipment_' + pID + '_carried'})[0];
+            if (coinPursePU) {
+                coinPursePU.setWithWorker('current', 1);
+                setTimeout(function () {
+                    coinPursePU.set('current', 'on');
+                }, 250);
             }
         } else {
             sendChat('PurseStrings', '/w GM Could not find Purse ID!', null, {noarchive:true});

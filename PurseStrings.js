@@ -1,4 +1,4 @@
-﻿/*
+/*
 PurseStrings
 A money management system for Roll20 using the 5eShaped Sheet.
 
@@ -12,9 +12,9 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '2.4',
+    var version = '3.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
-        partyUpdated = false,
+        debugMode = false,
 
     checkInstall = function () {
         if (!_.has(state, 'PURSESTRINGS')) state['PURSESTRINGS'] = state['PURSESTRINGS'] || {};
@@ -22,6 +22,16 @@ var PurseStrings = PurseStrings || (function () {
         if (typeof state['PURSESTRINGS'].dropChange == 'undefined') state['PURSESTRINGS'].dropChange = false;
         if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
         log('--> PurseStrings v' + version + ' <-- Initialized');
+
+        if (debugMode) {
+            adminDialog('DEBUG MODE', 'PurseStrings loaded.');
+        }
+
+        if (upgradeNeeded()) {
+            var upgradeNotice = 'One or more of your PurseStrings-enabled characters require an upgrade from '
+            + 'the previous version. <a href="!ps --upgrade">Click here to perform the upgrade</a>.';
+            adminDialog('Upgrade Needed', upgradeNotice);
+        }
     },
 
     //----- INPUT HANDLER -----//
@@ -76,17 +86,24 @@ var PurseStrings = PurseStrings || (function () {
   							commandInventory(msg.content);
   						}
   						break;
+                    case '--upgrade':
+  						if (playerIsGM(msg.playerid)) {
+  							commandUpgrade();
+  						}
+  						break;
+                    case '--give':
 					case '--buy':
 						commandBuy(msg);
 						break;
 					case '--show':
 						commandShow(msg);
 						break;
+                    case '--help':
                     default:
-                        sendChat('PurseStrings', 'You called !ps without a valid parameter. Try again.', null, {noarchive:true});
+                        commandHelp(msg);
 				}
 			} else {
-				sendChat('PurseStrings', 'You called !ps without any parameters. Try again.', null, {noarchive:true});
+				commandHelp(msg);
 			}
 		}
     },
@@ -114,6 +131,9 @@ var PurseStrings = PurseStrings || (function () {
 								});
 						});
 
+                        if (!hasEquip(char_id)) {
+                            addCoinPurse(char_id);
+                        }
                         addShowPurse(char_id);
 
                         var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
@@ -121,6 +141,7 @@ var PurseStrings = PurseStrings || (function () {
 						if (coins) {
 							var initpurse = changePurse(msg.content, char_id, 'add');
                             if (initpurse) {
+                                updateCoinWeight(char_id);
                                 message += ' Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
                             }
 						}
@@ -176,6 +197,34 @@ var PurseStrings = PurseStrings || (function () {
         partyUpdated = true;
     },
 
+    commandHelp = function (msg) {
+        // Help dialog with list of commands and a link to the Config Menu
+        var message;
+        if (playerIsGM(msg.playerid)) {
+            message = '<b>!ps --help</b><br>Sends this Help dialog to the chat window.<br><br>'
+            + '<b>!ps --setup</b><br>Set up for use with PurseStrings. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --setup 15gp</b><br>Set up and add 15gp startup coins. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --show</b><br>Show Purse in the chat window. Requires selected token(s).<br><br>'
+            + '<b>!ps --show --whisper</b><br>Whisper Purse in the chat window. Requires selected token(s).<br><br>'
+            + '<b>!ps --dist 500cp 300sp 100gp</b><br>Distributes 500cp, 300sp, and 100gp evenly between Party Members. <i>GM only</i>.<br><br>'
+            + '<b>!ps --add 15gp</b><br>Add 15gp to the Purse. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --subt 15gp</b><br>Remove 15gp from the Purse. Requires selected token(s). <i>GM only</i>.<br><br>'
+            + '<b>!ps --give &#60;giver_id&#62; &#60;receiver_id&#62; 15gp</b><br>Giver gives 15gp to Receiver.'
+            + '<b>!ps --buy &#60;buyer_id&#62; &#60;seller_id&#62; 15gp</b><br>Exchanges 15gp from buyer to seller.<br><br>'
+            + '<b>!ps --buy &#60;buyer_id&#62; &#60;merchant_id&#62; 15gp --inv- item|Dagger</b><br>Buys a Dagger from Merchant for 15gp.<br><br>'
+            + '<b>!ps --buy &#60;merchant_id&#62; &#60;seller_id&#62; 7gp --inv+ item|Dagger</b><br>Sells a Dagger to Merchant for 7gp.<br><br>'
+            + '<b>!ps --invlist &#60;merchant_id&#62;</b><br>Show Merchant inventory list in chat window. <i>GM only</i>.<br><br>'
+            + '}} {{text_center=<br><b><a style="font-size: 125%" href="!ps --config">⚙️ CONFIG MENU</a></b><br><br>';
+            adminDialog('PurseStrings Help', message);
+        } else {
+            message = '<b>!ps --help</b><br>Sends this Help dialog to the chat window.<br><br>'
+            + '<b>!ps --show</b><br>Show your Purse in the chat window. Requires selected token(s).<br><br>'
+            + '<b>!ps --show --whisper</b><br>Whisper your Purse to you in the chat window. Requires selected token(s).<br><br>'
+            + '<b>!ps --give &#60;giver_id&#62; &#60;receiver_id&#62; 15gp</b><br>Giver gives 15gp to Receiver.';
+            showDialog('PurseStrings Help', '', message, msg.who, true);
+        }
+    },
+
     commandDrop = function (msg) {
         // Set the cross-session default falue of dropChange
         var regex = /true|yes|sure|yep/i,
@@ -220,7 +269,7 @@ var PurseStrings = PurseStrings || (function () {
             message += 'hidden from players, with "out of stock" items not being displayed in the list. <a href="!ps --stock true">Change</a>';
         }
 
-        message += '<br><br><b style="color:#591209;">PARTY MEMBERS</b><br>';
+        message += '<br><br><span class="sheet-rt-title"><span class="sheet-rt-title-name">Party Members</span></span><br>';
         if (state['PURSESTRINGS'].partyMembers.length) {
             message += 'The following characters are in the Party Members list for loot distribution:<br><ul>';
             _.each(state['PURSESTRINGS'].partyMembers, function(char_id) {
@@ -231,7 +280,7 @@ var PurseStrings = PurseStrings || (function () {
         } else {
             message += 'There are no characters in the Party Members list! ';
         }
-        message += 'To add one or more characters, select their token(s) and <a href="!ps --party">click here</a>.';
+        message += 'To add one or more characters to the Party Members list, select their token(s) and <a href="!ps --party">click here</a>.';
 
         adminDialog('Settings', message);
     },
@@ -292,7 +341,7 @@ var PurseStrings = PurseStrings || (function () {
 
 					// Count coins to determine total weight
 					var total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
-					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(2) + ' lbs.';
+					content += '<br>Total weight of coins: ' + (total * 0.02).toFixed(0) + ' lbs.';
 
 					showDialog('Purse Contents', character.get('name'), content, msg.who, whispers(msg.content));
 				}
@@ -301,7 +350,8 @@ var PurseStrings = PurseStrings || (function () {
 	},
 
 	commandBuy = function (msg) {
-		var seller, buyer, item, commands = msg.content.split(/\s+/);
+		var seller, buyer, item, giving, rx = /\-\-give/gi, commands = msg.content.split(/\s+/);
+        giving = (rx.test(msg.content)) ? true : false;
 		if (commands[2] && commands[2] !== '') buyer = getObj('character', commands[2]);
 		if (commands[3] && commands[3] !== '') seller = getObj('character', commands[3]);
         item = getItemDesc(msg);
@@ -317,18 +367,28 @@ var PurseStrings = PurseStrings || (function () {
                             var add = (commands[5] == '--inv+');
                             var merchant_id = (commands[5] == '--inv+') ? buyer.get('id') : seller.get('id');
                             updateInventory(merchant_id, item, paid, add);
+                            showDialog('Transaction Success', seller.get('name'), buyer.get('name') + ' paid you ' + paid + ' for one ' + item + '.', seller.get('name'), true);
+                        } else {
+                            if (giving) {
+                                showDialog('Transaction Success', seller.get('name'), 'You received ' + paid + ' from ' + buyer.get('name') + item + '.', seller.get('name'), true);
+                            }
                         }
                         item = item.length > 0 ? ' for one ' + item : item;
-						showDialog('Transaction Success', buyer.get('name'), 'You paid ' + paid + ' to ' + seller.get('name') + item + '.', msg.who, true);
+                        var successMsg = giving ? 'You gave ' + paid + ' to ' + seller.get('name') + item + '.' : 'You paid ' + paid + ' to ' + seller.get('name') + item + '.';
+                        setTimeout(function () {
+                            showDialog('Transaction Success', buyer.get('name'), successMsg, msg.who, true);
+                        }, 1000);
 					}
 				} else {
 					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', msg.who, true);
 				}
 			} else {
-				showDialog('Transaction Error', buyer.get('name'), 'You must have a valid seller to do business with!', msg.who, false);
+                var errMsg1 = giving ? 'You must have a valid recipient!' : 'You must have a valid seller to do business with!';
+				showDialog('Transaction Error', buyer.get('name'), errMsg1, msg.who, false);
 			}
 		} else {
-			showDialog('Transaction Error', '', 'You must select a buyer and/or seller to do business!', msg.who, false);
+            var errMsg2 = giving ? 'You must have a giver and a receiver to exchange money!' : 'You must have a buyer and a seller to do business!';
+            showDialog('Transaction Error', '', errMsg2, msg.who, false);
 		}
 	},
 
@@ -439,7 +499,7 @@ var PurseStrings = PurseStrings || (function () {
                         }
                     });
                     if (whispers(msg)) sendChat(merchant.get('name'), '/w GM ' + inventory);
-                    else sendChat(merchant.get('name'), inventory);
+                    else sendChat('character|' + char_id, inventory);
                 } else {
                     sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
                 }
@@ -489,7 +549,9 @@ var PurseStrings = PurseStrings || (function () {
                     sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
                 }
             });
-            commandInventory('!ps --invlist ' + char_id);
+            setTimeout(function () {
+                commandInventory('!ps --invlist ' + char_id);
+            }, 500);
         } else {
             sendChat('PurseStrings', '/w GM Merchant character is not set up for PurseStrings!', null, {noarchive:true});
         }
@@ -545,6 +607,18 @@ var PurseStrings = PurseStrings || (function () {
             }
         });
 
+		return result;
+	},
+
+	hasEquip = function (id) {
+		// Returns whether the provided character has been setup with the 3.0 equipment attribute
+		var result = true;
+        var equipPurse = findObjs({
+            _type: 'attribute',
+            characterid: id,
+            name: 'pursestrings_purse_id'
+        }, {caseInsensitive: true})[0];
+        if (!equipPurse) result = false;
 		return result;
 	},
 
@@ -809,6 +883,7 @@ var PurseStrings = PurseStrings || (function () {
 				gp.set('current', purse['gp']);
 				pp.set('current', purse['pp']);
 
+                updateCoinWeight(char_id);
 			} else {
 				result = false;
 				sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
@@ -835,9 +910,6 @@ var PurseStrings = PurseStrings || (function () {
 
         if (whisper) {
             sendChat('PurseStrings', '/w ' + whisperTo + ' ' + dialogStr);
-            //if (whisperTo !== 'GM') {
-            //    sendChat('PurseStrings', '/w GM ' + dialogStr + ' {{text=Called by '+ player + '}}');
-            //}
         } else {
             sendChat('PurseStrings', dialogStr);
         }
@@ -875,11 +947,62 @@ var PurseStrings = PurseStrings || (function () {
             var spmacro = createObj("ability", {
                 name: 'ShowPurse',
                 characterid: char_id,
-                action: '!ps --show',
+                action: '!ps --show --whisper',
                 istokenaction: true
             });
         }
 
+    },
+
+    addCoinPurse = function (char_id) {
+        // Add an Equipment item for encumbrance of coin weight
+        const data = {};
+        var coinPurse = {
+          content: 'Container for PurseStrings script. DO NOT modify or delete!',
+          name: 'CoinPurse',
+          type: 'Adventuring Gear',
+          weight: 0
+        };
+        var RowID = generateRowID();
+        var repString = 'repeating_equipment_' + RowID;
+        Object.keys(coinPurse).forEach(function (field) {
+          data[repString + '_' + field] = coinPurse[field];
+        });
+        setAttrs(char_id, data);
+
+        var purseID = createObj('attribute', {
+            characterid: char_id,
+            name: 'pursestrings_purse_id',
+            current: RowID
+        });
+    },
+
+    updateCoinWeight = function (char_id) {
+        // Update the CoinPurse equipment item with the total weight of all coins
+        var purseID = findObjs({type: 'attribute', characterid: char_id, name: 'pursestrings_purse_id'}, {caseInsensitive: true})[0];
+        if (purseID) {
+            var pID = purseID.get('current');
+            var coins = getPurse(char_id);
+            var totalWeight = ((coins['cp'] + coins['sp'] + coins['ep'] + coins['gp'] + coins['pp']) * 0.02).toFixed(0);
+
+            var coinPurse = findObjs({type: 'attribute', characterid: char_id, name: 'repeating_equipment_' + pID + '_weight'})[0];
+            if (coinPurse) {
+                coinPurse.setWithWorker('current', totalWeight);
+            } else {
+                sendChat('PurseStrings', '/w GM Could not find "repeating_equipment_' + pID + '_weight!"', null, {noarchive:true});
+            }
+
+            // Trigger the sheet workers to recalculate the total weight of all equipment
+            var coinPursePU = findObjs({type: 'attribute', characterid: char_id, name: 'repeating_equipment_' + pID + '_carried'})[0];
+            if (coinPursePU) {
+                coinPursePU.setWithWorker('current', 1);
+                setTimeout(function () {
+                    coinPursePU.set('current', 'on');
+                }, 250);
+            }
+        } else {
+            sendChat('PurseStrings', '/w GM Could not find Purse ID!', null, {noarchive:true});
+        }
     },
 
     whispers = function (cmds) {
@@ -943,6 +1066,65 @@ var PurseStrings = PurseStrings || (function () {
             return s.replace(re, function(c){ return entities[c] || c; });
         };
     }()),
+
+    generateUUID = (function () {
+        "use strict";
+        var a = 0, b = [];
+        return function() {
+            var c = (new Date()).getTime() + 0, d = c === a;
+            a = c;
+            for (var e = new Array(8), f = 7; 0 <= f; f--) {
+                e[f] = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(c % 64);
+                c = Math.floor(c / 64);
+            }
+            c = e.join("");
+            if (d) {
+                for (f = 11; 0 <= f && 63 === b[f]; f--) {
+                    b[f] = 0;
+                }
+                b[f]++;
+            } else {
+                for (f = 0; 12 > f; f++) {
+                    b[f] = Math.floor(64 * Math.random());
+                }
+            }
+            for (f = 0; 12 > f; f++){
+                c += "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(b[f]);
+            }
+            return c;
+        };
+    }()),
+
+    generateRowID = function () {
+        "use strict";
+        return generateUUID().replace(/_/g, "Z");
+    },
+
+    upgradeNeeded = function () {
+        var needsUpgrade = false;
+        var chars = findObjs({ _type: 'character', archived: false });
+        _.each(chars, function(char) {
+            var char_id = char.get('id');
+            if (hasPurse(char_id) && !hasEquip(char_id)) {
+                needsUpgrade = true;
+            }
+        });
+        return needsUpgrade;
+    },
+
+    commandUpgrade = function () {
+        var count = 0, chars = findObjs({ _type: 'character', archived: false });
+        _.each(chars, function(char) {
+            var char_id = char.get('id');
+            if (hasPurse(char_id) && !hasEquip(char_id)) {
+                addCoinPurse(char_id);
+                updateCoinWeight(char_id);
+                count++;
+            }
+        });
+        sendChat('PurseStrings', '/w GM &{template:5e-shaped} {{title=Upgrade Successful}} {{content=' + count
+        + ' PurseStrings-enabled character(s) were successfully upgraded to the current version.}}', null, {noarchive:true});
+    },
 
     //---- PUBLIC FUNCTIONS ----//
 

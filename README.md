@@ -105,7 +105,7 @@ Out of stock items (a quantity of zero) will display "(out of stock)" when showS
 
 ---
 ### --party
-**GM Only** You may add characters to a Party Members list that persists between sessions. This will allow you to distribute loot ([below](#--dist)) without needing to select player tokens. To do this, select the tokens representing the characters you wish to add and use the following command:
+**GM Only** You may add characters you have [set up already](#--setup) to a Party Members list that persists between sessions. This will allow you to distribute loot ([below](#--dist)) without needing to select player tokens. To do this, select the tokens representing the characters you wish to add and use the following command:
 
 ```!ps --party```
 

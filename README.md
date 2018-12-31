@@ -85,7 +85,7 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ---
 ### --drop
-**GM Only** The GM can change the way loot is distributed ([below](#--dist)) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped so your players can decide amongst themselves who should receive the remainder, or "false" to automatically give it to a random Party Member. The default value is "false." A link to toggle this setting is included in the `--config` dialog.
+**GM Only** The GM can change the way loot is distributed ([below](#--dist)) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped so your players can decide amongst themselves who should receive the remainder, or "false" to automatically give it to a random Party Member. The default value is "false." A link to toggle this setting is included in the `--config` dialog ([above](#--config)).
 
 ```
 !ps --drop true
@@ -94,7 +94,7 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ---
 ### --stock
-**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game. A link to toggle this setting is included in the `--config` dialog.
+**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game. A link to toggle this setting is included in the `--config` dialog ([above](#--config)).
 
 ```
 !ps --stock true

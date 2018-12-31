@@ -69,7 +69,7 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 
 ---
 ### --setup
-**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command to view their Purse:
+**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command ([below](#--show)) to view their Purse:
 
 ```!ps --setup```
 
@@ -79,13 +79,13 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ---
 ### --config
-**GM Only** One of the first things you will want to do is configure PurseStrings for your game. After you have setup all of your characters using the `--setup` command [above](#--setup), use the `--config` command to see a list of your [Party Members](#--party) and the value of your **[Drop](#--drop)** and **[showStock](#--stock)** variables. The config menu will give a link to change these variables as well as a link to add Party Members.
+**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add Party Members.
 
 ```!ps --config```
 
 ---
 ### --drop
-**GM Only** The GM can change the way loot is distributed ([below](#--dist)) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped so the players can decide amongst themselves who should receive the remainder, or "false" to give it to a random Party Member. The default value is "false." An option to change this setting is included in the `--config` dialog.
+**GM Only** The GM can change the way loot is distributed ([below](#--dist)) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped so your players can decide amongst themselves who should receive the remainder, or "false" to automatically give it to a random Party Member. The default value is "false." A link to toggle this setting is included in the `--config` dialog.
 
 ```
 !ps --drop true
@@ -94,7 +94,7 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ---
 ### --stock
-**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game. An option to change this setting is included in the `--config` dialog.
+**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game. A link to toggle this setting is included in the `--config` dialog.
 
 ```
 !ps --stock true
@@ -105,17 +105,17 @@ Out of stock items (a quantity of zero) will display "(out of stock)" when showS
 
 ---
 ### --party
-**GM Only** You may add characters to a Party Members list that persists between sessions. This will allow you to utilize the `--dist` command without needing player tokens selected. To do this, select the tokens representing the characters you wish to add and use the following command:
+**GM Only** You may add characters to a Party Members list that persists between sessions. This will allow you to distribute loot ([below](#--dist)) without needing to select player tokens. To do this, select the tokens representing the characters you wish to add and use the following command:
 
 ```!ps --party```
 
 You can use this command more than once in case you are in game and cannot select all of them at once. The command will simply add the new token to the list.
 
-If you wish to remove characters from the Party Members list, you will essentially start over with a new group. Select the tokens you wish to keep or add and pass `--reset` along with the `--party` command:
+If you wish to remove characters from the Party Members list, you will essentially start over with a new group. Select the tokens you wish to keep and pass `--reset` along with the `--party` command:
 
 ```!ps --party --reset```
 
-Passing this command without tokens selected will *remove all characters from the list.*
+Passing the `--reset` command without tokens selected will *remove all characters from the list.*
 
 ---
 ### --show
@@ -123,7 +123,7 @@ To display the contents of a character's Purse, use the `--show` parameter. It w
 
 ```!ps --show```
 
-You may also send an optional `--whisper` command to make `--show` whisper the results.
+You may also send an optional `--whisper` command to make `--show` whisper the results. This is default when [setting up your characters](#--setup) for the first time.
 
 ```!ps --show --whisper```
 
@@ -136,7 +136,7 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 !ps --dist 146sp, 398gp
 ```
 
-The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. To configure this there is a `--drop` command ([above](#--drop)) which toggles this behavior on or off. When leftover coins are dropped, the dialog will give a "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
+The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. See the [drop](#--drop) command above. When leftover coins are dropped, this command will provide a GM-only "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
 
 ---
 ### --add
@@ -162,7 +162,7 @@ As with the `--subt` parameter, the exchange will fail if the amount of the coin
 
 ---
 ### --buy
-Characters can also pay of goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a character/NPC that has been set up as a Merchant ([see above](#merchants-setup)).
+Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a character/NPC that has been set up as a Merchant ([see above](#merchants-setup)).
 
 To exchange money for an item or service, you use the `--buy` parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
 
@@ -182,11 +182,11 @@ However, if a player has found a Greatsword and wishes to sell it to the Merchan
 
 ```!ps --buy <merchant_id> <seller_id> 37gp --inv+ item|Greatsword```
 
-The Inventory dialog for Merchants (below) outputs the proper code for all purchases from a Merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated.
+The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code for all purchases from a Merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated.
 
 ---
 ### --invlist
-**GM Only** Merchants that have already been setup with an inventory list (see [instructions](#merchants-setup) above) may display their inventory using the `--invlist` command followed by the character ID:
+**GM Only** Merchants that have already been setup with an inventory list (see [instructions](#merchants-setup) above) may display their inventory using the `--invlist` command followed by the Merchant's character ID:
 
 ```!ps --invlist <merchant_id>```
 

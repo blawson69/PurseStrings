@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '3.0',
+    var version = '3.1',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
         debugMode = false,
 
@@ -24,7 +24,7 @@ var PurseStrings = PurseStrings || (function () {
         log('--> PurseStrings v' + version + ' <-- Initialized');
 
         if (debugMode) {
-            adminDialog('DEBUG MODE', 'PurseStrings loaded.');
+            adminDialog('DEBUG MODE', 'PurseStrings loaded. <a href="!ps --config">Show config</a>');
         }
 
         if (upgradeNeeded()) {
@@ -194,7 +194,6 @@ var PurseStrings = PurseStrings || (function () {
         message += '<a href="!ps --config">Settings</a>';
 
         adminDialog('Party Members', message);
-        partyUpdated = true;
     },
 
     commandHelp = function (msg) {
@@ -958,10 +957,14 @@ var PurseStrings = PurseStrings || (function () {
         // Add an Equipment item for encumbrance of coin weight
         const data = {};
         var coinPurse = {
-          content: 'Container for PurseStrings script. DO NOT modify or delete!',
-          name: 'CoinPurse',
-          type: 'Adventuring Gear',
-          weight: 0
+            content: 'Container for PurseStrings script. DO NOT modify or delete!',
+            name: 'CoinPurse',
+            type: 'ADVENTURING_GEAR',
+            toggle_details: 0,
+            content_toggle: '1',
+            weight_system: 'POUNDS',
+            weight: 0,
+            weight_total: 0
         };
         var RowID = generateRowID();
         var repString = 'repeating_equipment_' + RowID;

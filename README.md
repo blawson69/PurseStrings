@@ -12,35 +12,45 @@ All of the examples below represent 30cp and 4gp:
 * 30:0:0:4:0
 
 ## Party Members
-You can add characters to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. This only applies to the use of the `--dist` command. Giving individual characters money still requires that the character(s) token(s) be selected.
+You can [add characters](#--party) to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. This only applies to the use of the `--dist` command [below](#--dist). Giving individual characters money still requires that the character(s) token(s) be selected.
 
 ## Merchant Setup
-Merchants are characters you have set up with PurseStrings that have items or services to sell. To create an inventory, follow the instructions below.
-1. Edit the Merchant character's journal entry and go to the GM Notes field.
-2. The first line must be "PurseStrings Inventory" and nothing else.
-3. Enter each item on its own line in the following manner:  
+> This version of PurseStrings contains a *significant* update to the Merchant Inventory system and the syntax for the [`--give`](#--give) and [`--buy`](#--buy) commands. If you have used a previous version of this script, please pay close attention to the following documentation for changes you will need to make to any characters and/or macros you may be using.
+
+Merchants are NPCs that have items or services to sell. A Merchant has two requirements: 1) It must be a **token** that contains the Merchant's inventory in the token's GM Notes, and 2) The token must represent a Character that has been [set up](#--setup) with PurseStrings. This allows for more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions.
+
+You can now allow a Merchant's Inventory to override the [default show stock setting](#--stock) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token.
+
+To create a Merchant, follow the instructions below.
+1. Add "show-stock" or "hide-stock" to the first Bar 1 box, if desired.
+2. Edit the token's GM Notes field.
+     3. The first line must be either "PurseStrings Inventory" or "PurseStrings Menu" and nothing else. The dialog displayed through the [`--invlist`](#--invlist) command will give the name of the Merchant token along with either "Inventory" or "Menu" as you provide here.
+     4. Enter each item on its own line in the following manner:  
     *Item Name|price|quantity*  
 If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  
     *Item Name|price|*
-4. If you have multiple categories, you may add category headers by simply giving the category name its own line.
-5. Click the 'Save Changes' button.
+Price must be a single denomination, i.e. "2cp" or "1200gp" and not "2cp, 1200gp".
+     5. If you have multiple categories, you may add category headers by simply giving the category name its own line above the items of that category.
+6. The PurseStrings inventory data *must* be the only data in the token's GM Notes field!
+7. Click the 'Save Changes' button.
 
 Here is an example GM Note for a small town blacksmith Merchant:
 ```
 PurseStrings Inventory
-SERVICES
+Services
 Sword Sharpening|2gp|
-WEAPONS
+Armor Polishing|5gp|
+Weapons
 Dagger|2gp|5
 Hand Axe|5gp|3
 Shortsword|10gp|1
-ADVENTURING GEAR
+Adventuring Gear
 Potion of Healing|50gp|4
-Alchemist's Fire (flask)|50gp|2
+Alchemist's Fire|50gp|2
 ```
-If a Merchant buys an item from a player that is not already in their inventory, it will be added to the bottom of the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price will be double the amount at which it was purchased. Updates to inventory outside of purchases must be done by editing the GM Notes field.
+If a Merchant buys an item from a player that is not already in their inventory, it will be added to the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price on new items will be double the amount at which it was purchased. Updates to inventory outside of purchases may be done by editing the GM Notes field. See the [`--buy` command](#--buy) for options and information.
 
-**Note:** The PurseStrings inventory data *must* be the only data in the GM Notes field!
+**Upgrade Notice:** If you have used a previous version of PurseStrings and wish to continue to use a character as a Merchant, you *must* move all inventory into a token after upgrading to this version. This can be the character's default token, but be aware that updating the inventory for the default token will be a *manual process.* PurseStrings cannot update a default token, so you will need to edit your character and replace the current default with the token on the VTT that contains the latest version of inventory.
 
 ## Syntax
 
@@ -48,8 +58,8 @@ If a Merchant buys an item from a player that is not already in their inventory,
 
 ## Commands:
 * **[--help](#--help)**
-* **[--setup](#--setup)**
 * **[--config](#--config)**
+* **[--setup](#--setup)**
 * **[--drop](#--drop)**
 * **[--stock](#--stock)**
 * **[--party](#--party)**
@@ -68,6 +78,12 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 ```!ps --help```
 
 ---
+### --config
+**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add Party Members.
+
+```!ps --config```
+
+---
 ### --setup
 **GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command ([below](#--show)) to view their Purse:
 
@@ -76,12 +92,6 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to every selected character. The following adds 50cp, 20sp, and 10gp to each selected character:
 
 ```!ps --setup 50:20:0:10:0```
-
----
-### --config
-**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add Party Members.
-
-```!ps --config```
 
 ---
 ### --drop
@@ -94,14 +104,16 @@ If you wish to add a starting amount to the selected characters, you can optiona
 
 ---
 ### --stock
-**GM Only** When a merchant's inventory is displayed, you can either show the amount of items in stock, or keep this information hidden. To change this you use the `--stock` command. Set it to "true" if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. Default is "true." This parameter applies to all merchants in the game. A link to toggle this setting is included in the `--config` dialog ([above](#--config)).
+**GM Only** When a merchant's inventory is displayed, you can choose to either show the amount of each item in stock, or keep this information hidden. There is a default that applies to all Merchants that can be changed with the `--stock` command. Send "true" with this command if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. The default value is "true." A link to toggle this setting is included in the `--config` dialog ([above](#--config)).
 
 ```
 !ps --stock true
 !ps --stock false
 ```
 
-Out of stock items (a quantity of zero) will display "(out of stock)" when showStock is "true." If showStock is "false", the out of stock items are not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will never display any quantity regardless of the showStock setting.
+You may also set this value individually on each Merchant token. This is necessary if you wish to override the default. To do so, simply add "show-stock" or "hide-stock" to the first Bar 1 box on the token.
+
+When you wish to show stock, items with a quantity of zero will display "out of stock." If you are hiding the stock count, the out of stock items will not be not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchants-setup)) will always be shown and will never display any quantity regardless of the this setting.
 
 ---
 ### --party
@@ -154,43 +166,39 @@ Equivalences are used when determining what coins are removed. For instance, if 
 
 ---
 ### --give
-Characters can exchange money between themselves. The first ID passed is that of the character giving the money, the second is that of the recipient character. Coinage is sent as the last parameter.
+Characters can exchange money between themselves. You must send a token ID that represents both the giving character and the taking (receiving) character along with the amount being given.
 
-```!ps --give <giver_id> <receiver_id> 50gp```
+**Upgrade Notice:** This command has changed significantly from previous versions of PurseStrings. Where you sent the character ID before you must send the token ID. This change was implemented to prevent confusion with the updates to the Merchant Inventory system. Also, be aware that the command syntax is now different.
 
-As with the `--subt` parameter, the exchange will fail if the amount of the coinage is more than what the giver has in their Purse, and equivalences will be used for making change.
+```!ps --give --giver|<giver_id> --taker|<taker_id> --amt|50gp```
+
+As with the `--subt` command ([above](#--subt)), the exchange will fail if the amount of the coinage is more than what the giver has in their Purse, and equivalences will be used for making change.
 
 ---
 ### --buy
-Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a character/NPC that has been set up as a Merchant ([see above](#merchants-setup)).
+Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a NPC that has been set up as a Merchant ([see above](#merchants-setup)). Note that this *does not* add items to a player character's sheet, it only deals with the money.
 
-To exchange money for an item or service, you use the `--buy` parameter along with the character ID of both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. The first ID passed is that of the buyer character, the second is that of the seller. As always, the coinage is sent last.
+**Upgrade Notice:** This command has changed significantly from previous versions of PurseStrings. Where you sent a character ID before you must send a token ID representing that character. This change was implemented to prevent confusion with the updates to the Merchant Inventory system. Also, be aware that the command syntax is now different.
 
-```!ps --buy <buyer_id> <seller_id> 50gp```
+To exchange money for an item or service, you use the `--buy` command along with the IDs of tokens representing both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. Also required is the amount for which the item is being sold using `--amt|<coinage>`, and the name of the item using `--item|<item_name>`.
 
-As with the `--subt` command, the transaction will fail if the amount of the coinage is more than what the buyer has in their Purse, and equivalences will be used for making change.
+```!ps --buy --buyer|<buyer_id> --seller|<seller_id> --amt|50gp --item|Potion of Healing```
 
-If you are using `--buy` to purchase an item, you may send the optional `item|<item_description>` parameter as a way to better describe the transaction. This parameter *must come last* and will be included in the transaction dialog. The item description is optional except for when selling to a Merchant.
+You can send a category for the item by separating the name and category with a tilde symbol (~). This will allow you to categorize items that are not already in a Merchant's Inventory. If no category is sent, an "Uncategorized" category will be used.
 
-```!ps --buy <buyer_id> <seller_id> 50gp item|Potion of Healing```
+```!ps --buy --buyer|<buyer_id> --seller|<seller_id> --amt|37gp --item|Greatsword~Weapons```
 
-To indicate a purchase involving a Merchant with an inventory, the `--inv` parameter must be passed along with an indicator of `+` or `-` which determines whether the item being purchased should be added or removed from the Merchant's inventory. For example, the command to purchase a Dagger from a Merchant is as follows:
+As with the `--subt` command ([above](#--subt)), the transaction will fail if the price is more than what the buyer has in their Purse, and equivalences will be used for making change.
 
-```!ps --buy <buyer_id> <merchant_id> 50gp --inv- item|Dagger```
-
-However, if a player has found a Greatsword and wishes to sell it to the Merchant, you would use this command:
-
-```!ps --buy <merchant_id> <seller_id> 37gp --inv+ item|Greatsword```
-
-The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code for all purchases from a Merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated.
+The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code for all purchases from a Merchant. Players will simply click the "Buy" link in the Inventory dialog to make a purchase. Once the inventory has been updated, a new inventory list dialog will automatically be generated with any quantity changes.
 
 ---
 ### --invlist
-**GM Only** Merchants that have already been setup with an inventory list (see [instructions](#merchants-setup) above) may display their inventory using the `--invlist` command followed by the Merchant's character ID:
+**GM Only** You can display a Merchant's Inventory (see [instructions](#merchants-setup) above) using the `--invlist` command followed by the Merchant token's ID:
 
 ```!ps --invlist <merchant_id>```
 
-This generates a dialog with the merchant's inventory and provides the item name, price, and a link the player's can use to make the purchase.
+This generates a dialog with the merchant's inventory/menu and provides the item name, price, and a link the player's can use to make the purchase.
 
 ## Notes
 

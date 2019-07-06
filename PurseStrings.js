@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '3.1',
+    var version = '4.0',
 		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
         debugMode = false,
 
@@ -24,7 +24,14 @@ var PurseStrings = PurseStrings || (function () {
         log('--> PurseStrings v' + version + ' <-- Initialized');
 
         if (debugMode) {
-            adminDialog('DEBUG MODE', 'PurseStrings loaded. <a href="!ps --config">Show config</a>');
+            var d = new Date();
+            adminDialog('Debug Mode', 'PurseStrings v' + version + ' loaded at ' + d.toLocaleTimeString() + '<br><a href="!ps --config">Show config</a>');
+        }
+
+        if (typeof state['PURSESTRINGS'].merchWarning == 'undefined') {
+            state['PURSESTRINGS'].merchWarning = true;
+            var merchWarning = ' This version of PurseStrings contains a <b>significant</b> update to the Merchant Inventory system and the syntax for the <i>--give</i> and <i>--buy</i> commands. If you have used a previous version of this script, you will need to make changes to all Merchant-related characters and/or macros you may be using.<br><br>See the <a href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more information.';
+            adminDialog('Merchant Update Notice', merchWarning);
         }
 
         if (upgradeNeeded()) {
@@ -111,7 +118,7 @@ var PurseStrings = PurseStrings || (function () {
     commandSetup = function (msg) {
 		// Setup character for using PurseStrings
 		if (!msg.selected || !msg.selected.length) {
-			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
+			adminDialog('Setup Error', 'No tokens are selected!');
 			return;
 		}
 
@@ -148,7 +155,7 @@ var PurseStrings = PurseStrings || (function () {
 
                         adminDialog('Setup Complete', message);
 					} else {
-						sendChat('PurseStrings', '/w GM PurseString attributes already exist for ' + character.get('name') + '!', null, {noarchive:true});
+						adminDialog('Setup Error', 'PurseString attributes already exist for ' + character.get('name') + '!');
 					}
 				}
 			}
@@ -286,7 +293,7 @@ var PurseStrings = PurseStrings || (function () {
 
 	commandAdd = function (msg) {
 		if(!msg.selected || !msg.selected.length){
-			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
+			adminDialog('Add Coinage Error', 'No tokens are selected!');
 			return;
 		}
 
@@ -305,7 +312,7 @@ var PurseStrings = PurseStrings || (function () {
 
 	commandSubt = function (msg) {
 		if(!msg.selected || !msg.selected.length){
-			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
+			adminDialog('Subtract Coinage Error', 'No tokens are selected!');
 			return;
 		}
 
@@ -327,7 +334,7 @@ var PurseStrings = PurseStrings || (function () {
 	commandShow = function (msg) {
 		// Show one or more individual's current Purse contents
 		if(!msg.selected || !msg.selected.length){
-			sendChat('PurseStrings', '/w GM No tokens are selected!', null, {noarchive:true});
+			adminDialog('Show Purse Error', 'No tokens are selected!');
 			return;
 		}
 		_.each(msg.selected, function(obj) {
@@ -349,45 +356,65 @@ var PurseStrings = PurseStrings || (function () {
 	},
 
 	commandBuy = function (msg) {
-		var seller, buyer, item, giving, rx = /\-\-give/gi, commands = msg.content.split(/\s+/);
-        giving = (rx.test(msg.content)) ? true : false;
-		if (commands[2] && commands[2] !== '') buyer = getObj('character', commands[2]);
-		if (commands[3] && commands[3] !== '') seller = getObj('character', commands[3]);
-        item = getItemDesc(msg);
+        // !ps --buy --buyer|<buyer_id> --seller|<seller_id> --amt|50gp --item|Dagger~Weapons
+        // !ps --give  --giver|<giver_id> --taker|<taker_id> --amt|50gp
+        var rb = /\-\-(buyer|giver)\|/gi, rs = /\-\-(seller|taker)\|/gi, ri = /\-\-item\|/gi, ra = /\-\-amt\|/gi,
+        buyer_token_id, seller_token_id, buyer_token_name = '', seller_token_name = '', amount = '';
+        var seller, buyer, merchant_name = '', item = '', rx = /\-\-give/gi, commands = msg.content.split('--');
+        var giving = (rx.test(msg.content)) ? true : false;
 
-		if (buyer && seller) {
-			if (hasPurse(seller.get('id'))) {
-				var purchased = changePurse(msg.content, buyer.get('id'), 'subt');
-				if (purchased) {
-					var sold = changePurse(msg.content, seller.get('id'), 'add');
-					if (sold) {
-                        var paid = prettyCoins(parseCoins(msg.content), true);
-                        if (commands[5] && commands[5].match(/\-\-inv[\+\-]/i) !== null) {
-                            var add = (commands[5] == '--inv+');
-                            var merchant_id = (commands[5] == '--inv+') ? buyer.get('id') : seller.get('id');
-                            updateInventory(merchant_id, item, paid, add);
-                            showDialog('Transaction Success', seller.get('name'), buyer.get('name') + ' paid you ' + paid + ' for one ' + item + '.', seller.get('name'), true);
+        if (rb.test(msg.content)) buyer_token_id = _.find(commands, function (tmpStr) { return (tmpStr.startsWith('buyer|') || tmpStr.startsWith('giver|')); }).split('|')[1].trim();
+        if (rs.test(msg.content)) seller_token_id = _.find(commands, function (tmpStr) { return (tmpStr.startsWith('seller|') || tmpStr.startsWith('taker|')); }).split('|')[1].trim();
+        if (ra.test(msg.content)) amount = _.find(commands, function (tmpStr) { return tmpStr.startsWith('amt|'); }).split('|')[1].trim();
+        if (ri.test(msg.content)) item = _.find(commands, function (tmpStr) { return tmpStr.startsWith('item|'); }).split('|')[1].trim();
+
+		if (buyer_token_id) {
+            let buyer_token = getObj('graphic', buyer_token_id);
+            if (buyer_token) {
+                buyer_token_name = buyer_token.get('name');
+                buyer = getObj('character', buyer_token.get('represents'));
+            }
+        }
+		if (seller_token_id) {
+            let seller_token = getObj('graphic', seller_token_id);
+            if (seller_token) {
+                seller_token_name = seller_token.get('name');
+                seller = getObj('character', seller_token.get('represents'));
+            }
+        }
+
+		if (buyer && hasPurse(buyer.get('id')) && seller && hasPurse(seller.get('id'))) {
+            var purchased = changePurse(amount, buyer.get('id'), 'subt');
+            if (purchased) {
+                var sold = changePurse(amount, seller.get('id'), 'add');
+                if (sold) {
+                    var desc = item.split('~')[0].trim();
+                    if (giving) {
+                        showDialog('Transaction Successful', seller.get('name'), 'You received ' + amount + ' from ' + buyer.get('name') + '.', seller.get('name'), true);
+                        showDialog('Transaction Successful', buyer.get('name'), 'You gave ' + amount + ' to ' + seller.get('name') + '.', buyer.get('name'), true);
+                    } else {
+                        if (isMerchant(buyer_token_id)) {
+                            updateInventory(buyer_token_id, item, amount, 'add');
+                            adminDialog('Purchase Successful', buyer_token_name + ' paid ' + seller.get('name') + ' ' + amount + ' for one ' + desc + '.');
                         } else {
-                            if (giving) {
-                                showDialog('Transaction Success', seller.get('name'), 'You received ' + paid + ' from ' + buyer.get('name') + item + '.', seller.get('name'), true);
-                            }
+                            showDialog('Purchase Successful', buyer.get('name'), 'You paid ' + seller_token_name + ' ' + amount + ' for one ' + desc + '.', buyer.get('name'), true);
                         }
-                        item = item.length > 0 ? ' for one ' + item : item;
-                        var successMsg = giving ? 'You gave ' + paid + ' to ' + seller.get('name') + item + '.' : 'You paid ' + paid + ' to ' + seller.get('name') + item + '.';
-                        setTimeout(function () {
-                            showDialog('Transaction Success', buyer.get('name'), successMsg, msg.who, true);
-                        }, 1000);
-					}
-				} else {
-					showDialog('Transaction Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', msg.who, true);
-				}
-			} else {
-                var errMsg1 = giving ? 'You must have a valid recipient!' : 'You must have a valid seller to do business with!';
-				showDialog('Transaction Error', buyer.get('name'), errMsg1, msg.who, false);
-			}
+
+                        if (isMerchant(seller_token_id)) {
+                            updateInventory(seller_token_id, item, amount, 'remove');
+                            adminDialog('Sale Successful', buyer.get('name') + ' bought one ' + desc + ' from ' + seller_token_name + ' for ' + amount + '.');
+                        } else {
+                            showDialog('Sale Successful', seller.get('name'), buyer_token_name + ' paid you ' + amount + ' for one ' + desc + '.', seller.get('name'), true);
+                        }
+                    }
+                }
+            } else {
+                showDialog('Purchase Error', buyer.get('name'), 'You don\'t have enough money for that transaction!', buyer.get('name'), true);
+            }
+
 		} else {
             var errMsg2 = giving ? 'You must have a giver and a receiver to exchange money!' : 'You must have a buyer and a seller to do business!';
-            showDialog('Transaction Error', '', errMsg2, msg.who, false);
+            adminDialog('Transaction Error', errMsg2);
 		}
 	},
 
@@ -429,7 +456,7 @@ var PurseStrings = PurseStrings || (function () {
                         recipients.push(member.get('name'));
                     }
                 } else {
-                    sendChat('PurseStrings', '/w GM "' + id + '" is an invalid ID.', null, {noarchive:true});
+                    adminDialog('Distribution Error', '"' + id + '" is an invalid ID.');
                 }
             });
 
@@ -444,7 +471,7 @@ var PurseStrings = PurseStrings || (function () {
                     if (changed) {
                         comments = '<br>' + luckyOne.get('name') + ' recieved ' + xcoins + ' of leftover loot.';
                     } else {
-                        sendChat('PurseStrings', '/w GM Could not add leftovers to ' + luckyOne.get('name'), null, {noarchive:true});
+                        adminDialog('Distribution Error', 'Could not add leftovers to ' + luckyOne.get('name') + '.');
                     }
                 }
             } else {
@@ -467,93 +494,132 @@ var PurseStrings = PurseStrings || (function () {
 
     commandInventory = function (msg) {
         //Shows the inventory for a merchant character
-        var merchant, char_id = '', inventory = '', commands = msg.split(/\s+/);
+        var merchant, token_id = '', showStock = state['PURSESTRINGS'].showStock, commands = msg.split(/\s+/);
 		if (commands[2] && commands[2] !== '') {
-            char_id = commands[2];
-            merchant = getObj('character', char_id);
-        }
-        if (merchant && hasPurse(char_id)) {
-            merchant.get('gmnotes', function (gmnotes) {
-                var notes = decodeEditorText(gmnotes, {asArray:true});
-                if (notes && notes[0].match(/^PurseStrings Inventory$/i) !== null) {
-                    notes.shift();
-                    inventory = '&{template:5e-shaped} {{title=Inventory}} {{show_character_name=1}} {{character_name=' + merchant.get('name') + '}} ';
-                    _.each(notes, function(item) {
-                        if (item.search(/\|/) > 0) {
-                            let a = item.split('|');
-                            if (state['PURSESTRINGS'].showStock) {
-                                if (a[2] !== 0 && a[2] !== '0') {
-                                    var quant = (a[2] == -1 || a[2] == '') ? '' : ' (' + a[2] + ' available)'
-                                    inventory += '{{' + a[0] + '=' + a[1] + quant + ' <a href="!ps --buy &#64;&lbrace;selected|character_id&rbrace; ' + char_id + ' ' + a[1] + ' --inv- item|' + a[0] + '">Buy</a> }} ';
-                                } else {
-                                    inventory += '{{' + a[0] + '=' + a[1] + ' (out of stock) }} ';
-                                }
-                            } else {
-                                if (a[2] !== 0 && a[2] !== '0') {
-                                    inventory += '{{' + a[0] + '=' + a[1] + ' <a href="!ps --buy &#64;&lbrace;selected|character_id&rbrace; ' + char_id + ' ' + a[1] + ' --inv- item|' + a[0] + '">Buy</a> }} ';
-                                }
-                            }
+            token_id = commands[2];
+            var token = getObj('graphic', token_id);
+            if (token) {
+                if (token.get('bar1_value').trim() == 'show-stock') showStock = true;
+                if (token.get('bar1_value').trim() == 'hide-stock') showStock = false;
+                merchant = getObj('character', token.get('represents'));
+                if (merchant && hasPurse(merchant.get('id'))) {
+                    var notes = decodeEditorText(token.get('gmnotes'), {asArray:true});
+                    if (notes && notes[0].match(/^PurseStrings (Inventory|Menu)$/) !== null) {
+                        var label = notes[0].replace('PurseStrings ', '');
+                        notes.shift();
+                        var invList = '&{template:5e-shaped} {{title=' + token.get('name') + '\'s ' + label + '}} {{content=';
+                        var inv = parseInventory(notes);
+                        if (inv && inv.length > 0) {
+                            var cats = _.uniq(_.pluck(inv, 'category'));
+                            _.each(cats, function (cat) {
+                                invList += '<b style="font-size: 1.25em;">' + cat + '</b><ul style="list-style-type: circle;">';
+                                let thisCat = _.filter(inv, function (item) { return item.category == cat; });
+                                _.each(thisCat, function (item) {
+                                    if (showStock === true) {
+                                        if (item.quantity !== 0 && item.quantity !== '0') {
+                                            let quant = (item.quantity == -1 || item.quantity == '') ? '' : ' <span style="float: right;">(' + item.quantity + ' available)</span>'
+                                            invList += '<li><a href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace; --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' + item.name + '</b></a> - ' +  item.price + quant + '</li>';
+                                        } else {
+                                            invList += '<li><b>' +  item.name + '</b> <span style="float: right;"><i>out of stock</i></span></li>';
+                                        }
+                                    } else {
+                                        if (item.quantity !== 0 && item.quantity !== '0') {
+                                            invList += '<li><a href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace;  --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' +  item.name + '</b></a> - ' + item.price + '</li>';
+                                        }
+                                    }
+                                });
+                                invList += '</ul>';
+                            });
                         } else {
-                            inventory += '{{' + item.trim() + '=}} ';
+                            invList += '<i>No inventory found!</i>';
                         }
-                    });
-                    if (whispers(msg)) sendChat(merchant.get('name'), '/w GM ' + inventory);
-                    else sendChat('character|' + char_id, inventory);
+                        invList += '}} ';
+
+                        if (whispers(msg)) sendChat(token.get('name'), '/w GM ' + invList, null, {noarchive:true});
+                        else sendChat(token.get('name'), invList);
+                    } else {
+                        adminDialog('Inventory Error', 'Merchant has no inventory!');
+                    }
+
                 } else {
-                    sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
+                    adminDialog('Inventory Error', 'Merchant does not represent a character set up for PurseStrings!');
                 }
-            });
+            } else {
+                adminDialog('Inventory Error', 'Not a valid token!');
+            }
         } else {
-            sendChat('PurseStrings', '/w GM Merchant character is not set up for PurseStrings!', null, {noarchive:true});
+            adminDialog('Inventory Error', 'No Merchant ID sent!');
         }
-        return inventory;
     },
 
-    updateInventory = function (char_id, desc, price, add = false) {
-        //Updates the inventory for a merchant character
-        var merchant = getObj('character', char_id);
-        if (merchant && hasPurse(char_id)) {
-            merchant.get('gmnotes', function (gmnotes) {
-                var newGMnotes = '';
-                var notes = decodeEditorText(gmnotes, {asArray:true});
-                if (notes && notes[0].match(/^PurseStrings Inventory$/i) !== null) {
-                    var found = _.find(notes, function(note) {let d = note.split('|'); return d[0] == desc});
-                    if (found) {
-                        _.each(notes, function(item) {
-                            if (item.search(/\|/) > 0) {
-                                var a = item.split('|');
-                                var quant = parseInt(a[2]);
-                                if (a[0] === desc && !isNaN(quant)) {
-                                    quant = (add) ? quant + 1 : quant - 1;
-                                    if (quant < 0) quant = 0;
-                                    newGMnotes += '<p>' + desc + '|' + a[1] + '|' + quant + '</p>';
-                                } else {
-                                     newGMnotes += '<p>' + item + '</p>';
-                                }
-                            } else {
-                                newGMnotes += '<p>' + item + '</p>';
-                            }
-                        });
-                    } else {
-                        _.each(notes, function(item) {
-                            if (typeof item !== 'undefined') newGMnotes += '<p>' + item + '</p>';
-                        });
-
-                        var num = parseInt(price), denom = price.replace(/\d+/, '');
-                        var newItem = desc + '|' + (num * 2) + denom + '|1';
-                        newGMnotes += '<p>' + newItem + '</p>';
-                    }
-                    merchant.set('gmnotes', newGMnotes);
+    updateInventory = function (token_id, desc, price, action) {
+        //Updates the inventory for a Merchant
+        var label, desc = desc.split('~'), token = getObj('graphic', token_id), add = (action == 'add') ? true : false;
+        if (token) {
+            var notes = decodeEditorText(token.get('gmnotes'), {asArray:true});
+            var merchant = getObj('character', token.get('represents'));
+            if (notes && merchant && hasPurse(merchant.get('id'))) {
+                label = notes[0].replace('PurseStrings ', '');
+                notes.shift();
+                var inv = parseInventory(notes);
+                var found = _.find(inv, function(item) { return item.name == desc[0]; });
+                if (found) {
+                    _.each(inv, function (item) {
+                        if (item.name == desc[0] && typeof item.quantity === 'number') {
+                            item.quantity = add ? item.quantity += 1 : item.quantity -= 1;
+                            if (item.quantity < 0) item.quantity = 0;
+                        }
+                    });
                 } else {
-                    sendChat('PurseStrings', '/w GM Merchant character has no inventory!', null, {noarchive:true});
+                    var cat = (desc[1]) ? desc[1].trim() : 'Uncategorized';
+                    var newItem = {name: desc[0], category: cat, quantity: 1, price: doublePrice(price)};
+                    inv.push(newItem);
                 }
-            });
-            setTimeout(function () {
-                commandInventory('!ps --invlist ' + char_id);
-            }, 500);
+
+                var cats = _.uniq(_.pluck(inv, 'category')),
+                newNotes = '<p>PurseStrings ' + label + '</p>';
+                _.each(cats, function (cat) {
+                    newNotes += '<p>' + cat + '</p>';
+                    let thisCat = _.filter(inv, function (item) { return item.category == cat; });
+                    _.each(thisCat, function (item) {
+                        newNotes += '<p>' + item.name + '|' + item.price + '|' + item.quantity + '</p>';
+                    });
+                });
+                token.set('gmnotes', newNotes);
+
+                setTimeout(function () {
+                    commandInventory('!ps --invlist ' + token_id);
+                }, 250);
+            } else {
+                adminDialog('Inventory Error', 'Merchant does not represent a character set up for PurseStrings!');
+            }
         } else {
-            sendChat('PurseStrings', '/w GM Merchant character is not set up for PurseStrings!', null, {noarchive:true});
+            adminDialog('Inventory Error', 'Not a valid token!');
         }
+    },
+
+    parseInventory = function (notesArray) {
+        // Parses the array from the GM Notes of a Merchant and returns an Inventory Object
+        // Item Name|price|quantity
+        var inv = [], cats = ['Uncategorized'];
+        _.each(notesArray, function(line) {
+            line = line.trim();
+            if (line.search(/\|/) > 0) {
+                let item = {}, a = line.split(/\s*\|\s*/);
+                item.category = _.last(cats);
+                item.name = a[0];
+                item.price = a[1];
+                if (a[2] != '' && !isNaN(a[2])) {
+                    item.quantity = parseInt(a[2]);
+                } else {
+                    item.quantity = '';
+                }
+                inv.push(item);
+            } else {
+                if (line.length > 0) cats.push(line);
+            }
+        });
+        return inv;
     },
 
 	parseCoins = function (cmds) {
@@ -590,6 +656,30 @@ var PurseStrings = PurseStrings || (function () {
 		}
 
 		return coins;
+    },
+
+    doublePrice = function (price) {
+        // Returns double the given price
+        var newPrice, px = /\d+\s*(cp|sp|ep|gp|pp)/gi;
+        if (px.test(price)) {
+            var number = parseInt(price);
+            var denom = price.replace(/\d+\s*/g, '');
+            newPrice = (number * 2) + denom;
+        }
+        return newPrice;
+    },
+
+    isMerchant = function (token_id) {
+        var isMerch = false;
+        var token = getObj('graphic', token_id);
+        if (token) {
+            var char = getObj('character', token.get('represents'));
+            var notes = decodeEditorText(token.get('gmnotes'), {asArray:true});
+            if (typeof char !== 'undefined' && typeof notes == 'object' && notes[0].match(/^PurseStrings (Inventory|Menu)$/) !== null) {
+                isMerch = true;
+            }
+        }
+        return isMerch;
     },
 
 	hasPurse = function (id) {
@@ -639,6 +729,7 @@ var PurseStrings = PurseStrings || (function () {
 
 	changePurse = function (pockets, char_id, type='add') {
 		// Add or subtract from a character's Purse
+        // Returns boolean result
 		var result = true;
 		if (hasPurse(char_id)) {
 			var coins = parseCoins(pockets);
@@ -692,7 +783,7 @@ var PurseStrings = PurseStrings || (function () {
 												purse['pp'] -= coins['pp'];
 											} else {
 												result = false;
-												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['pp'] + 'pp?', null, {noarchive:true});
+												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['pp'] + 'pp?');
 											}
 										}
 									}
@@ -734,7 +825,7 @@ var PurseStrings = PurseStrings || (function () {
 												purse['gp'] -= coins['gp'];
 											} else {
 												result = false;
-												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['gp'] + 'gp?', null, {noarchive:true});
+												adminDialog('Change Purse Error', '/w GM Not enough coinage to cover ' + coins['gp'] + 'gp?');
 											}
 										}
 									}
@@ -776,7 +867,7 @@ var PurseStrings = PurseStrings || (function () {
 												purse['ep'] -= coins['ep'];
 											} else {
 												result = false;
-												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['ep'] + 'ep?', null, {noarchive:true});
+												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['ep'] + 'ep?');
 											}
 										}
 									}
@@ -818,7 +909,7 @@ var PurseStrings = PurseStrings || (function () {
 												purse['sp'] -= coins['sp'];
 											} else {
 												result = false;
-												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['sp'] + 'sp?', null, {noarchive:true});
+												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['sp'] + 'sp?');
 											}
 										}
 									}
@@ -860,7 +951,7 @@ var PurseStrings = PurseStrings || (function () {
 												purse['cp'] -= coins['cp'];
 											} else {
 												result = false;
-												sendChat('PurseStrings', '/w GM Not enough coinage to cover ' + coins['cp'] + 'cp?', null, {noarchive:true});
+												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['cp'] + 'cp?');
 											}
 										}
 									}
@@ -885,13 +976,13 @@ var PurseStrings = PurseStrings || (function () {
                 updateCoinWeight(char_id);
 			} else {
 				result = false;
-				sendChat('PurseStrings', '/w GM No coinage was indicated or coinage syntax was incorrect', null, {noarchive:true});
+				adminDialog('Change Purse Error', 'No coinage was indicated or coinage syntax was incorrect.');
 			}
 		} else {
 			result = false;
             var character = getObj('character', char_id);
             if (character) {
-                sendChat('PurseStrings', '/w GM ' + character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup', null, {noarchive:true});
+                adminDialog('PurseStrings Error', character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup');
             }
 		}
 		return result;
@@ -992,7 +1083,7 @@ var PurseStrings = PurseStrings || (function () {
             if (coinPurse) {
                 coinPurse.setWithWorker('current', totalWeight);
             } else {
-                sendChat('PurseStrings', '/w GM Could not find "repeating_equipment_' + pID + '_weight!"', null, {noarchive:true});
+                adminDialog('Update Coin Weight Error', 'Could not find "repeating_equipment_' + pID + '_weight!"');
             }
 
             // Trigger the sheet workers to recalculate the total weight of all equipment
@@ -1004,7 +1095,7 @@ var PurseStrings = PurseStrings || (function () {
                 }, 250);
             }
         } else {
-            sendChat('PurseStrings', '/w GM Could not find Purse ID!', null, {noarchive:true});
+            adminDialog('Update Coin Weight Error', 'Could not find Purse ID!');
         }
     },
 
@@ -1125,8 +1216,7 @@ var PurseStrings = PurseStrings || (function () {
                 count++;
             }
         });
-        sendChat('PurseStrings', '/w GM &{template:5e-shaped} {{title=Upgrade Successful}} {{content=' + count
-        + ' PurseStrings-enabled character(s) were successfully upgraded to the current version.}}', null, {noarchive:true});
+        adminDialog('Upgrade Successful', count + ' PurseStrings-enabled character(s) were successfully upgraded to the current version.');
     },
 
     //---- PUBLIC FUNCTIONS ----//

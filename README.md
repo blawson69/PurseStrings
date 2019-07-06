@@ -15,7 +15,7 @@ All of the examples below represent 30cp and 4gp:
 You can [add characters](#--party) to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. This only applies to the use of the `--dist` command [below](#--dist). Giving individual characters money still requires that the character(s) token(s) be selected.
 
 ## Merchant Setup
-> This version of PurseStrings contains a *significant* update to the Merchant Inventory system and the syntax for the [`--give`](#--give) and [`--buy`](#--buy) commands. If you have used a previous version of this script, please pay close attention to the following documentation for changes you will need to make to any characters and/or macros you may be using.
+<div style="color: red; border: 1px red solid; margin: 3px 16px;">This version of PurseStrings contains a *significant* update to the Merchant Inventory system and the syntax for the [`--give`](#--give) and [`--buy`](#--buy) commands. If you have used a previous version of this script, please pay close attention to the following documentation for changes you will need to make to any characters and/or macros you may be using.</div>
 
 Merchants are NPCs that have items or services to sell. A Merchant has two requirements: 1) It must be a **token** that contains the Merchant's inventory in the token's GM Notes, and 2) The token must represent a Character that has been [set up](#--setup) with PurseStrings. This allows for more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions.
 

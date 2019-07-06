@@ -28,11 +28,11 @@ You can now allow a Merchant's Inventory to override the [default show stock set
 To create a Merchant, follow the instructions below.
 1. Add "show-stock" or "hide-stock" to the first Bar 1 box, if desired.
 2. Edit the token's GM Notes field.
- 3. The first line must be either "PurseStrings Inventory" or "PurseStrings Menu" and nothing else. The dialog displayed through the [`--invlist`](#--invlist) command will give the name of the Merchant token along with either "Inventory" or "Menu" as you provide here.
+3. The first line must be either "PurseStrings Inventory" or "PurseStrings Menu" and nothing else. The dialog displayed through the [`--invlist`](#--invlist) command will give the name of the Merchant token along with either "Inventory" or "Menu" as you provide here.
 4. Enter each item on its own line in the following manner:  
     *Item Name|price|quantity*  
 If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  
-    *Item Name|price|*
+    *Item Name|price|*  
 Price must be a single denomination, i.e. "2cp" or "1200gp" and not "2cp, 1200gp".
 5. If you have multiple categories, you may add category headers by simply giving the category name its own line above the items of that category.
 6. The PurseStrings inventory data *must* be the only data in the token's GM Notes field!

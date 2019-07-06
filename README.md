@@ -72,7 +72,7 @@ If a Merchant buys an item from a player that is not already in their inventory,
 * **[--add](#--add)** <_coinage_>
 * **[--subt](#--subt)** <_coinage_>
 * **[--give](#--give)** <_giver_id_> <_receiver_id_> <_coinage_>
-* **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_>
+* **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_> <_item_>
 * **[--invlist](#--invlist)** <_merchant_id_>
 
 ---

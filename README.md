@@ -20,6 +20,7 @@ You can [add characters](#--party) to a Party Members list which persists across
 Merchants are NPCs that have items or services to sell. A Merchant has two requirements:
 1. It must be a **token** that contains the Merchant's inventory (below) in the token's GM Notes, and
 2. The token must represent a Character that has been [set up](#--setup) with PurseStrings.
+
 This allows for more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions.
 
 You can now allow a Merchant's Inventory to override the [default show stock setting](#--stock) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.

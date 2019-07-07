@@ -39,13 +39,13 @@ var PurseStrings = PurseStrings || (function () {
 
         if (typeof state['PURSESTRINGS'].merchWarning == 'undefined') {
             state['PURSESTRINGS'].merchWarning = true;
-            var merchWarning = ' This version of PurseStrings contains a <b>significant</b> update to the Merchant Inventory system and the syntax for the <i>--give</i> and <i>--buy</i> commands. If you have used a previous version of this script, you will need to make changes to all Merchant-related characters and/or macros you may be using.<br><br>See the <a href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more information.';
+            var merchWarning = ' This version of PurseStrings contains a <b>significant</b> update to the Merchant Inventory system and the syntax for the <i>--give</i> and <i>--buy</i> commands. If you have used a previous version of this script, you will need to make changes to all Merchant-related characters and/or macros you may be using.<br><br>See the <a style=\'' + styles.button + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more information.';
             adminDialog('Merchant Update Notice', merchWarning);
         }
 
         if (upgradeNeeded()) {
             var upgradeNotice = 'One or more of your PurseStrings-enabled characters require an upgrade from '
-            + 'the previous version. <a href="!ps --upgrade">Click here to perform the upgrade</a>.';
+            + 'the previous version. <a style=\'' + styles.button + '\' href="!ps --upgrade">Click here to perform the upgrade</a>.';
             adminDialog('Upgrade Needed', upgradeNotice);
         }
     },

@@ -78,13 +78,13 @@ If a Merchant buys an item from a player that is not already in their inventory,
 
 ---
 ### --help
-Whispers a PurseStrings help dialog in the chat window. It gives relative commands depending on whether the player is GM. The GM will also get a link to display the [Config Menu](#--config).
+Whispers a PurseStrings help dialog in the chat window. It gives relative commands depending on whether the player is GM. The GM will also get a button to display the [Config Menu](#--config).
 
 ```!ps --help```
 
 ---
 ### --config
-**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add [Party Members](#--party).
+**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add Party Members.
 
 ```!ps --config```
 

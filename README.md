@@ -29,7 +29,7 @@ To create a Merchant, follow the instructions below.
 1. Select and Edit a token you wish to represent your Merchant.
 2. Add "show-stock" or "hide-stock" to the first Bar 1 box, if desired.
 3. Edit the token's GM Notes field.
-4. The first line must be either "PurseStrings Inventory" or "PurseStrings Menu" and nothing else. The dialog displayed through the [`--invlist`](#--invlist) command will give the name of the Merchant token along with either "Inventory" or "Menu" as you provide here.
+4. The first line of Inventory must be either "PurseStrings Inventory" or "PurseStrings Menu" and nothing else. The dialog displayed through the [`--invlist`](#--invlist) command will give the name of the Merchant token along with either "Inventory" or "Menu" as you provide here.
 5. Enter each item on its own line in the following manner:  
     *Item Name|price|quantity*  
 If you wish to have an item that is "infinitely available" such as ale or services of any kind, leave the quantity blank:  

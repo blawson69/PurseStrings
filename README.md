@@ -84,7 +84,7 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 
 ---
 ### --config
-**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add Party Members.
+**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add [Party Members](#--party).
 
 ```!ps --config```
 
@@ -199,7 +199,7 @@ The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code
 
 ---
 ### --invlist
-**GM Only** You can display a Merchant's Inventory (see [instructions](#merchants-setup) above) using the `--invlist` command followed by the Merchant token's ID:
+**GM Only** You can display a Merchant's Inventory (see [setup instructions](#merchants-setup) above) using the `--invlist` command followed by the Merchant token's ID:
 
 ```!ps --invlist <merchant_id>```
 

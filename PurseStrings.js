@@ -13,8 +13,17 @@ var PurseStrings = PurseStrings || (function () {
     //---- INFO ----//
 
     var version = '4.0',
-		attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
-        debugMode = false,
+	attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
+    debugMode = false,
+    styles = {
+        list:  'list-style-type: circle; margin-left: 4px; list-style-position: inside;',
+        button: 'background-color: #000; border-width: 0px; border-radius: 5px; padding: 6px 9px; color: #fff; text-align: center;',
+        buttonWrapper: 'text-align: center; margin: 14px 0 10px 0; clear: both;',
+        textButton: 'background-color: transparent; border: none; padding: 0; color: #8e342a; text-decoration: underline;',
+        bigger: 'font-size: 1.125em; font-weight: bold; margin-right: 3px;',
+        unavail: 'color: #636363; font-style: italic;', right: 'float: right;',
+        code: 'font-family: "Courier New", Courier, monospace; font-size: 1.25em; padding-bottom: 6px;'
+    },
 
     checkInstall = function () {
         if (!_.has(state, 'PURSESTRINGS')) state['PURSESTRINGS'] = state['PURSESTRINGS'] || {};
@@ -204,29 +213,29 @@ var PurseStrings = PurseStrings || (function () {
     },
 
     commandHelp = function (msg) {
-        // Help dialog with list of commands and a link to the Config Menu
+        // Help dialog with list of commands and a link to the Config Menu for GM
         var message;
         if (playerIsGM(msg.playerid)) {
-            message = '<b>!ps --help</b><br>Sends this Help dialog to the chat window.<br><br>'
-            + '<b>!ps --setup</b><br>Set up for use with PurseStrings. Requires selected token(s). <i>GM only</i>.<br><br>'
-            + '<b>!ps --setup 15gp</b><br>Set up and add 15gp startup coins. Requires selected token(s). <i>GM only</i>.<br><br>'
-            + '<b>!ps --show</b><br>Show Purse in the chat window. Requires selected token(s).<br><br>'
-            + '<b>!ps --show --whisper</b><br>Whisper Purse in the chat window. Requires selected token(s).<br><br>'
-            + '<b>!ps --dist 500cp 300sp 100gp</b><br>Distributes 500cp, 300sp, and 100gp evenly between Party Members. <i>GM only</i>.<br><br>'
-            + '<b>!ps --add 15gp</b><br>Add 15gp to the Purse. Requires selected token(s). <i>GM only</i>.<br><br>'
-            + '<b>!ps --subt 15gp</b><br>Remove 15gp from the Purse. Requires selected token(s). <i>GM only</i>.<br><br>'
-            + '<b>!ps --give &#60;giver_id&#62; &#60;receiver_id&#62; 15gp</b><br>Giver gives 15gp to Receiver.'
-            + '<b>!ps --buy &#60;buyer_id&#62; &#60;seller_id&#62; 15gp</b><br>Exchanges 15gp from buyer to seller.<br><br>'
-            + '<b>!ps --buy &#60;buyer_id&#62; &#60;merchant_id&#62; 15gp --inv- item|Dagger</b><br>Buys a Dagger from Merchant for 15gp.<br><br>'
-            + '<b>!ps --buy &#60;merchant_id&#62; &#60;seller_id&#62; 7gp --inv+ item|Dagger</b><br>Sells a Dagger to Merchant for 7gp.<br><br>'
-            + '<b>!ps --invlist &#60;merchant_id&#62;</b><br>Show Merchant inventory list in chat window. <i>GM only</i>.<br><br>'
-            + '}} {{text_center=<br><b><a style="font-size: 125%" href="!ps --config">⚙️ CONFIG MENU</a></b><br><br>';
+            message = '<span style=\'' + styles.code + '\'>!ps --help</span><br>Sends this Help dialog to the chat window.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --setup</span><br>Set up selected character(s) for use with PurseStrings. <i>GM only</i>.<br><br>'
+            + '<span style=\'' + styles.code + '\'b>!ps --setup 15gp</span><br>Set up selected character(s) and add 15gp startup coins. <i>GM only</i>.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --show</span><br>Show selected character(s) Purse in the chat window.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --show --whisper</span><br>Whisper selected character(s) Purse in the chat window.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --dist 500cp 300sp 100gp</span><br>Distributes 500cp, 300sp, and 100gp evenly between Party Members. <i>GM only</i>.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --add 15gp</span><br>Add 15gp to the selected character(s) Purse. <i>GM only</i>.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --subt 15gp</span><br>Remove 15gp from the selected character(s) Purse. <i>GM only</i>.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --give --giver|&#60;giver_id&#62; --taker|&#60;taker_id&#62; --amt|15gp</span><br>Giver gives 15gp to Taker.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --buy --buyer|&#60;buyer_id&#62; --seller|&#60;merchant_id&#62; --amt|15gp --item|Dagger</span><br>PC buys a Dagger for 15gp.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --buy --buyer|&#60;merchant_id&#62; --seller|&#60;seller_id&#62; --amt|7gp --item|Dagger~Weapons</span><br>PC sells a Dagger to Merchant for 7gp.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --invlist &#60;merchant_id&#62;</span><br>Show Merchant inventory list in chat window. <i>GM only</i>.<br><br>'
+            + 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.'
+            + '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">CONFIG MENU</a></div>';
             adminDialog('PurseStrings Help', message);
         } else {
-            message = '<b>!ps --help</b><br>Sends this Help dialog to the chat window.<br><br>'
-            + '<b>!ps --show</b><br>Show your Purse in the chat window. Requires selected token(s).<br><br>'
-            + '<b>!ps --show --whisper</b><br>Whisper your Purse to you in the chat window. Requires selected token(s).<br><br>'
-            + '<b>!ps --give &#60;giver_id&#62; &#60;receiver_id&#62; 15gp</b><br>Giver gives 15gp to Receiver.';
+            message = '<span style=\'' + styles.code + '\'>!ps --help</span><br>Sends this Help dialog to the chat window.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --show</span><br>Shows your Purse in the chat window. Requires selected character\'s token.<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --show --whisper</span><br>Whispers your Purse to yourself in the chat window. Requires selected character\'s token(s).<br><br>'
+            + '<span style=\'' + styles.code + '\'>!ps --give --giver|&#60;giver_id&#62; --taker|&#60;taker_id&#62; --amt|15gp</span><br>Giver gives 15gp to Taker.';
             showDialog('PurseStrings Help', '', message, msg.who, true);
         }
     },
@@ -261,18 +270,18 @@ var PurseStrings = PurseStrings || (function () {
 
     commandConfig = function (msg) {
         // Config dialog with links to make changes
-        var message = '<b>Leftover loot</b> is currently set to be ';
+        var message = '<span style=\'' + styles.bigger + '\'>Leftover loot</span> is currently set to be ';
         if (state['PURSESTRINGS'].dropChange) {
-            message += 'dropped for non-random distribution. <a href="!ps --drop false">Change</a>';
+            message += 'dropped for non-random distribution. <a style=\'' + styles.textButton + '\' href="!ps --drop false">Change</a>';
         } else {
-            message += 'given to a random Party Member. <a href="!ps --drop true">Change</a>';
+            message += 'given to a random Party Member. <a style=\'' + styles.textButton + '\' href="!ps --drop true">Change</a>';
         }
 
-        message += '<br><br><b>Merchant stock</b> currently is set to be ';
+        message += '<br><br><span style=\'' + styles.bigger + '\'>Merchant stock</span> is currently set to be ';
         if (state['PURSESTRINGS'].showStock) {
-            message += 'shown to players, with "out of stock" items being labeled as such. <a href="!ps --stock false">Change</a>';
+            message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --stock false">Change</a>';
         } else {
-            message += 'hidden from players, with "out of stock" items not being displayed in the list. <a href="!ps --stock true">Change</a>';
+            message += 'hidden from players, with "out of stock" items not being displayed in the list. <a style=\'' + styles.textButton + '\' href="!ps --stock true">Change</a>';
         }
 
         message += '<br><br><span class="sheet-rt-title"><span class="sheet-rt-title-name">Party Members</span></span><br>';
@@ -286,8 +295,10 @@ var PurseStrings = PurseStrings || (function () {
         } else {
             message += 'There are no characters in the Party Members list! ';
         }
-        message += 'To add one or more characters to the Party Members list, select their token(s) and <a href="!ps --party">click here</a>.';
+        message += 'To add one or more characters to the Party Members list, select their token(s) and <a style=\'' + styles.textButton + '\' href="!ps --party">click here</a>.<br><br>';
 
+        message += 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.'
+        + '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --help">HELP MENU</a></div>';
         adminDialog('Settings', message);
     },
 
@@ -512,19 +523,19 @@ var PurseStrings = PurseStrings || (function () {
                         if (inv && inv.length > 0) {
                             var cats = _.uniq(_.pluck(inv, 'category'));
                             _.each(cats, function (cat) {
-                                invList += '<b style="font-size: 1.25em;">' + cat + '</b><ul style="list-style-type: circle;">';
+                                invList += '<b style="font-size: 1.25em;">' + cat + '</b><ul style="' + styles.list + '">';
                                 let thisCat = _.filter(inv, function (item) { return item.category == cat; });
                                 _.each(thisCat, function (item) {
                                     if (showStock === true) {
                                         if (item.quantity !== 0 && item.quantity !== '0') {
-                                            let quant = (item.quantity == -1 || item.quantity == '') ? '' : ' <span style="float: right;">(' + item.quantity + ' available)</span>'
-                                            invList += '<li><a href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace; --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' + item.name + '</b></a> - ' +  item.price + quant + '</li>';
+                                            let quant = (item.quantity == -1 || item.quantity == '') ? '' : ' <span style=\'' + styles.right + '\'>(' + item.quantity + ' available)</span>'
+                                            invList += '<li><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace; --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' + item.name + '</b></a> - ' +  item.price + quant + '</li>';
                                         } else {
-                                            invList += '<li><b>' +  item.name + '</b> <span style="float: right;"><i>out of stock</i></span></li>';
+                                            invList += '<li><b style=\'' + styles.unavail + '\'>' +  item.name + '</b> <span style=\'' + styles.right + '\'><i>out of stock</i></span></li>';
                                         }
                                     } else {
                                         if (item.quantity !== 0 && item.quantity !== '0') {
-                                            invList += '<li><a href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace;  --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' +  item.name + '</b></a> - ' + item.price + '</li>';
+                                            invList += '<li><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace;  --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' +  item.name + '</b></a> - ' + item.price + '</li>';
                                         }
                                     }
                                 });
@@ -1109,15 +1120,6 @@ var PurseStrings = PurseStrings || (function () {
         }
 
         return result;
-    },
-
-    getItemDesc = function (msg) {
-        //Returns the item description sent with the commandBuy command
-        var desc = '', pos = msg.content.search(/item\|/i);
-        if (pos >= 0) {
-            desc = msg.content.slice(pos + 5);
-        }
-        return HE(desc);
     },
 
     decodeEditorText = function (t, o) {

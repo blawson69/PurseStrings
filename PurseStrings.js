@@ -391,6 +391,9 @@ var PurseStrings = PurseStrings || (function () {
             if (seller_token) {
                 seller_token_name = seller_token.get('name');
                 seller = getObj('character', seller_token.get('represents'));
+            } else if (giving) {
+                seller = getObj('character', seller_token_id);
+                seller_token_name = seller.get('name');
             }
         }
 
@@ -401,8 +404,9 @@ var PurseStrings = PurseStrings || (function () {
                 if (sold) {
                     var desc = item.split('~')[0].trim();
                     if (giving) {
-                        showDialog('Transaction Successful', seller.get('name'), 'You received ' + amount + ' from ' + buyer.get('name') + '.', seller.get('name'), true);
-                        showDialog('Transaction Successful', buyer.get('name'), 'You gave ' + amount + ' to ' + seller.get('name') + '.', buyer.get('name'), true);
+                        showDialog('Exchange Successful', seller.get('name'), 'You received ' + amount + ' from ' + buyer.get('name') + '.', seller.get('name'), true);
+                        showDialog('Exchange Successful', buyer.get('name'), 'You gave ' + amount + ' to ' + seller.get('name') + '.', buyer.get('name'), true);
+                        adminDialog('Exchange Successful', buyer.get('name') + ' gave ' + seller.get('name') + ' ' + amount + '.');
                     } else {
                         if (isMerchant(buyer_token_id)) {
                             updateInventory(buyer_token_id, item, amount, 'add');
@@ -424,7 +428,12 @@ var PurseStrings = PurseStrings || (function () {
             }
 
 		} else {
-            var errMsg2 = giving ? 'You must have a giver and a receiver to exchange money!' : 'You must have a buyer and a seller to do business!';
+            var errMsg2 = 'The following errors were encountered:<ul>';
+            if (typeof buyer == 'undefined') errMsg2 += '<li>Buyer character was not found.</li>';
+            if (buyer && !hasPurse(buyer.get('id'))) errMsg2 += '<li>Buyer character is not set up with PurseStrings.</li>';
+            if (typeof seller == 'undefined') errMsg2 += '<li>Seller character was not found.</li>';
+            if (seller && !hasPurse(seller.get('id'))) errMsg2 += '<li>Seller character is not set up with PurseStrings.</li>';
+            errMsg2 += '</ul>';
             adminDialog('Transaction Error', errMsg2);
 		}
 	},

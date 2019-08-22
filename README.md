@@ -90,7 +90,7 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 
 ---
 ### --setup
-**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command adds the relevant PurseStrings attributes to each character, and gives players a token action for calling the `--show` command ([below](#--show)) to view their Purse:
+**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command registers each character with the script and adds a token action for calling the `--show` command ([below](#--show)) to view their Purse:
 
 `!ps --setup`
 

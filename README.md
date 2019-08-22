@@ -1,17 +1,17 @@
 # PurseStrings
 
-This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped). It adds a "Purse" to a character for storing coinage, and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also manages an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
+This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped) with the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
-> This version of PurseStrings contains a *significant* update to the [Merchant Inventory system](#merchant-setup) and the parameter syntax for the [`--give`](#--give) and [`--buy`](#--buy) commands. If you have used a previous version of this script, please pay close attention to the following documentation for changes you will need to make to any characters and/or macros you may be using.
+> This version of PurseStrings contains a *significant* update to the [Merchant Inventory system](#merchant-setup) (from v3.1) and subsequently the parameter syntax for the [`--give`](#--give) and [`--buy`](#--buy) commands. If you have used a previous version of this script, please pay close attention to the following documentation for changes you will need to make to any characters and/or macros you may be using.
 
 ## Coinage
-PurseStrings uses the [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content) and is fairly flexible in the way it accepts coinage. Coinage can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest (cp, sp, ep, gp, pp) with zeros for placeholders.
+PurseStrings is fairly flexible in the way it accepts coinage through the various commands. It can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest (cp, sp, ep, gp, pp) with zeros for placeholders.
 
 All of the examples below represent 30cp and 4gp:
-* 30cp 4gp
-* 30 cp 4 gp
-* 30cp, 4gp
-* 30:0:0:4:0
+- 30cp 4gp
+- 30 cp 4 gp
+- 30cp, 4gp
+- 30:0:0:4:0
 
 ## Party Members
 You can [add characters](#--party) to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. This only applies to the use of the `--dist` command [below](#--dist). Giving individual characters money still requires that the character(s) token(s) be selected.
@@ -207,4 +207,4 @@ This generates a dialog with the merchant's inventory/menu and provides the item
 
 ## Notes
 
-PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well. Be aware the script **does not interact** with the coinage visible in the 5e Shaped character sheet. In fact, the lack of access to those values is the sole purpose of this script. As such, any amounts entered in those fields will be ignored.
+PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well.

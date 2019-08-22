@@ -35,7 +35,7 @@ var PurseStrings = PurseStrings || (function () {
 
         if (debugMode) {
             var d = new Date();
-            adminDialog('Debug Mode', 'PurseStrings v' + version + ' loaded at ' + d.toLocaleTimeString() + '<br><a href="!ps --config">Show config</a>');
+            adminDialog('Debug Mode', 'PurseStrings v' + version + ' loaded at ' + d.toLocaleTimeString() + '<br><a style=\'' + styles.textButton + '\' href="!ps --config">Show config</a>');
         }
 
         if (typeof state['PURSESTRINGS'].merchWarning == 'undefined') {
@@ -95,6 +95,11 @@ var PurseStrings = PurseStrings || (function () {
                     case '--config':
   						if (playerIsGM(msg.playerid)) {
   							commandConfig(msg.content);
+  						}
+  						break;
+                    case '--pursed':
+  						if (playerIsGM(msg.playerid)) {
+  							commandPursed(msg.content);
   						}
   						break;
                     case '--invlist':
@@ -281,16 +286,27 @@ var PurseStrings = PurseStrings || (function () {
         commandConfig(msg);
     },
 
+    commandPursed = function (msg) {
+        // Displays a list of character names who have been set up with PurseStrings
+        var message = 'The following characters have been set up with PurseStrings:<ul>';
+        _.each(state['PURSESTRINGS'].pursed, function (char) {
+            message += '<li>' + char.char_name + ' (' + prettyCoins(getPurse(char.char_id), true) + ')</li>';
+        });
+        message += '</ul><div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">&#9668; BACK</a></div>';;
+        adminDialog('Character List', message);
+    },
+
     commandConfig = function (msg) {
         // Config dialog with links to make changes
-        var message = '<span style=\'' + styles.bigger + '\'>Leftover loot</span> is currently set to be ';
+        var message = 'You have ' + _.size(state['PURSESTRINGS'].pursed) + ' characters set up with PurseStrings. <a style=\'' + styles.textButton + '\' href="!ps --pursed">Show</a>.';
+        message += '<br><br><span style=\'' + styles.bigger + '\'>Leftover loot</span> default is currently set to be ';
         if (state['PURSESTRINGS'].dropChange) {
             message += 'dropped for non-random distribution. <a style=\'' + styles.textButton + '\' href="!ps --drop false">Change</a>';
         } else {
             message += 'given to a random Party Member. <a style=\'' + styles.textButton + '\' href="!ps --drop true">Change</a>';
         }
 
-        message += '<br><br><span style=\'' + styles.bigger + '\'>Merchant stock</span> is currently set to be ';
+        message += '<br><br><span style=\'' + styles.bigger + '\'>Merchant stock</span> default is currently set to be ';
         if (state['PURSESTRINGS'].showStock) {
             message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --stock false">Change</a>';
         } else {
@@ -1178,6 +1194,8 @@ var PurseStrings = PurseStrings || (function () {
     },
 
     commandUpgrade = function () {
+        adminDialog('Upgrading in Progress', 'Please stand by. This could take a minute. Do not click the upgrade button again.');
+
         var count = 0, chars = findObjs({ _type: 'character', archived: false });
         _.each(chars, function(char) {
             var char_id = char.get('id');

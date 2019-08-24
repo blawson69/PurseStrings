@@ -13,7 +13,6 @@ var PurseStrings = PurseStrings || (function () {
     //---- INFO ----//
 
     var version = '5.0',
-	attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'},
     debugMode = false,
     styles = {
         list:  'list-style-type: circle; margin-left: 4px; list-style-position: inside;',
@@ -99,7 +98,12 @@ var PurseStrings = PurseStrings || (function () {
   						break;
                     case '--pursed':
   						if (playerIsGM(msg.playerid)) {
-  							commandPursed(msg.content);
+  							commandPursed();
+  						}
+  						break;
+                    case '--remove':
+  						if (playerIsGM(msg.playerid)) {
+  							unPurse(parms[2]);
   						}
   						break;
                     case '--invlist':
@@ -142,8 +146,10 @@ var PurseStrings = PurseStrings || (function () {
 				if (token.get('represents') !== '') {
 					var char_id = token.get('represents');
 					var character = getObj('character', token.get('represents'));
+                    var pursed = isPursed(char_id);
+                    var can_purse = canPurse(char_id);
 
-                    if (!isPursed(char_id)) {
+                    if (!pursed && can_purse) {
                         var newChar = {char_id: char_id, char_name: character.get('name')};
                         var charAttrs = findObjs({type: 'attribute', characterid: char_id}, {caseInsensitive: true});
                         var currencyAttrs = _.filter(charAttrs, function (attr) {
@@ -182,7 +188,8 @@ var PurseStrings = PurseStrings || (function () {
 
                         adminDialog('Setup Complete', message);
 					} else {
-						adminDialog('Setup Warning', character.get('name') + ' has already been set up for PurseStrings!');
+                        if (pursed) adminDialog('Setup Warning', character.get('name') + ' has already been set up for PurseStrings!');
+                        if (!can_purse) adminDialog('Setup Warning', character.get('name') + ' does not have the default SRD currency (CP, SP, EP, GP, and PP) on their character sheet!');
                     }
 				}
 			}
@@ -191,7 +198,7 @@ var PurseStrings = PurseStrings || (function () {
 
     commandParty = function (msg) {
         // Manage party of characters who will be receiving loot in commandDist
-        var message = '', regex = /\-\-reset/i,
+        var message = '', errlist = [], regex = /\-\-reset/i,
         cmdString = msg.content.toString();
 
         if (regex.test(cmdString)) {
@@ -206,7 +213,7 @@ var PurseStrings = PurseStrings || (function () {
             message = 'The following characters have been added to the Party Members list for loot distribution:<br><ul>';
             _.each(msg.selected, function(obj) {
                 var token = getObj(obj._type, obj._id);
-                if(token) {
+                if (token) {
                     if (token.get('represents') !== '' && isPursed(token.get('represents'))) {
                         var char_id = token.get('represents');
                         var character = getObj('character', char_id);
@@ -214,18 +221,29 @@ var PurseStrings = PurseStrings || (function () {
                             state['PURSESTRINGS'].partyMembers.push(char_id);
                             members.push('<li>' + character.get('name') + '</li>');
                         }
+                    } else {
+                        if (token.get('represents') !== '') {
+                            var char_id = token.get('represents');
+                            var character = getObj('character', char_id);
+                            errlist.push('<li>' + character.get('name') + ' is not set up with PurseStrings.</li>');
+                        } else {
+                            errlist.push('<li>Token ' + token.get('id') + ' does not represent a character.</li>');
+                        }
                     }
                 }
             });
 
-            if (!members.length) {
-                message += '<li>No valid characters selected!</li>';
-            } else {
+            if (_.size(members) > 0) {
                 message += members.join('');
             }
             message += '</ul>';
+
+            if (_.size(errlist) > 0) {
+                if (_.size(members) == 0) message = '';
+                message += 'The following errors were encountered on one or more selected tokens:<ul>' + errlist.join('') + '</ul>';
+            }
         }
-        message += '<a href="!ps --config">Settings</a>';
+        message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">&#9668; BACK</a></div>';
 
         adminDialog('Party Members', message);
     },
@@ -286,27 +304,29 @@ var PurseStrings = PurseStrings || (function () {
         commandConfig(msg);
     },
 
-    commandPursed = function (msg) {
+    commandPursed = function () {
         // Displays a list of character names who have been set up with PurseStrings
-        var message = 'The following characters have been set up with PurseStrings:<ul>';
+        var message = 'The following characters have been set up with PurseStrings.<br><br>You may remove one by clicking the ❌ next to their name. This will also delete them from the Party Members list but <b>will not</b> remove any currency from their character sheet.<ul>';
         _.each(state['PURSESTRINGS'].pursed, function (char) {
-            message += '<li>' + char.char_name + ' (' + prettyCoins(getPurse(char.char_id), true) + ')</li>';
+            message += '<li>' + char.char_name + '&nbsp;<a style=\'' + styles.textButton + ' text-decoration: none; font-weight: bold;\' href="!ps --remove ' + char.char_id + '">❌</a></li>';
         });
-        message += '</ul><div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">&#9668; BACK</a></div>';;
+        message += '</ul><div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">&#9668; BACK</a></div>';
         adminDialog('Character List', message);
     },
 
     commandConfig = function (msg) {
         // Config dialog with links to make changes
-        var message = 'You have ' + _.size(state['PURSESTRINGS'].pursed) + ' characters set up with PurseStrings. <a style=\'' + styles.textButton + '\' href="!ps --pursed">Show</a>.';
-        message += '<br><br><span style=\'' + styles.bigger + '\'>Leftover loot</span> default is currently set to be ';
+        var message = 'You currently have ' + _.size(state['PURSESTRINGS'].pursed) + ' characters set up for use with PurseStrings. <a style=\'' + styles.textButton + '\' href="!ps --pursed">Show list</a>.';
+
+        message += '<br><br><span class="sheet-rt-title"><span class="sheet-rt-title-name">Default Settings</span></span><br>';
+        message += '<span style=\'' + styles.bigger + '\'>Leftover loot:</span> Default is currently set to be ';
         if (state['PURSESTRINGS'].dropChange) {
             message += 'dropped for non-random distribution. <a style=\'' + styles.textButton + '\' href="!ps --drop false">Change</a>';
         } else {
             message += 'given to a random Party Member. <a style=\'' + styles.textButton + '\' href="!ps --drop true">Change</a>';
         }
 
-        message += '<br><br><span style=\'' + styles.bigger + '\'>Merchant stock</span> default is currently set to be ';
+        message += '<br><br><span style=\'' + styles.bigger + '\'>Merchant stock:</span> Default is currently set to be ';
         if (state['PURSESTRINGS'].showStock) {
             message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --stock false">Change</a>';
         } else {
@@ -314,7 +334,7 @@ var PurseStrings = PurseStrings || (function () {
         }
 
         message += '<br><br><span class="sheet-rt-title"><span class="sheet-rt-title-name">Party Members</span></span><br>';
-        if (state['PURSESTRINGS'].partyMembers.length) {
+        if (_.size(state['PURSESTRINGS'].partyMembers) > 0) {
             message += 'The following characters are in the Party Members list for loot distribution:<br><ul>';
             _.each(state['PURSESTRINGS'].partyMembers, function(char_id) {
                 var character = getObj('character', char_id);
@@ -328,7 +348,7 @@ var PurseStrings = PurseStrings || (function () {
 
         message += 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.'
         + '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --help">HELP MENU</a></div>';
-        adminDialog('Settings', message);
+        adminDialog('PurseStrings Config', message);
     },
 
 	commandAdd = function (msg) {
@@ -745,13 +765,13 @@ var PurseStrings = PurseStrings || (function () {
         return result;
     },
 
-	hasPurse = function (id) {
-		// Returns whether the provided character has been setup with the correct attributes
-		var result = true;
+	hasPurse = function (char_id) {
+		// Returns whether the character has been setup with the legacy PurseStrings attributes
+		var result = true, attributes = {cp:'pursestrings_cp',sp:'pursestrings_sp',ep:'pursestrings_ep',gp:'pursestrings_gp',pp:'pursestrings_pp'};
         _.each(attributes, function(attribute) {
             var curAttr = findObjs({
                 _type: 'attribute',
-                characterid: id,
+                characterid: char_id,
                 name: attribute
             }, {caseInsensitive: true})[0];
             if (!curAttr) {
@@ -1078,21 +1098,10 @@ var PurseStrings = PurseStrings || (function () {
 
     addShowPurse = function (char_id) {
         // Adds an ability to the character during setup for the --show command
-        var abilities = findObjs({
-            name: 'ShowPurse',
-            type: 'ability',
-            characterid: char_id
-        })[0];
-
+        var abilities = findObjs({ name: 'ShowPurse', type: 'ability', characterid: char_id })[0];
         if (!abilities) {
-            var spmacro = createObj("ability", {
-                name: 'ShowPurse',
-                characterid: char_id,
-                action: '!ps --show --whisper',
-                istokenaction: true
-            });
+            var psmacro = createObj("ability", { name: 'ShowPurse', characterid: char_id, action: '!ps --show --whisper', istokenaction: true });
         }
-
     },
 
     whispers = function (cmds) {
@@ -1181,6 +1190,39 @@ var PurseStrings = PurseStrings || (function () {
         return generateUUID().replace(/_/g, "Z");
     },
 
+    canPurse = function (char_id) {
+        // Check for presence of default SRD currency attributes
+        var result = true,
+        charAttrs = findObjs({type: 'attribute', characterid: char_id}, {caseInsensitive: true});
+        var currencyAttrs = _.filter(charAttrs, function (attr) {
+            return (attr.get('name').match(/^repeating_currency_.+_acronym$/) !== null);
+        });
+        if (_.size(currencyAttrs) !== 5) {
+            result = false;
+        } else {
+            _.each(currencyAttrs, function (attr) {
+                var acronym = attr.get('current');
+                if (acronym.match(/^(CP|SP|EP|GP|PP)$/i) === null) result = false;
+            });
+        }
+        return result;
+    },
+
+    unPurse = function (char_id) {
+        var char_name = '[character not found]';
+        var pursed = _.find(state['PURSESTRINGS'].pursed, function (char) {return char.char_id == char_id});
+        if (pursed) char_name = pursed.char_name;
+        state['PURSESTRINGS'].pursed = _.reject(state['PURSESTRINGS'].pursed, function (char) {return char.char_id == char_id});
+        state['PURSESTRINGS'].partyMembers = _.reject(state['PURSESTRINGS'].partyMembers, function(id) {return id == char_id;});
+        var character = getObj('character', char_id);
+        if (character) {
+            var ability = findObjs({name: 'ShowPurse', type: 'ability', characterid: char_id})[0];
+            if (ability) ability.remove();
+        }
+        adminDialog('Character Removed', char_name + ' has been removed from PurseStrings.');
+        commandPursed();
+    },
+
     upgradeNeeded = function () {
         var needsUpgrade = false;
         var chars = findObjs({ _type: 'character', archived: false });
@@ -1241,11 +1283,11 @@ var PurseStrings = PurseStrings || (function () {
                 if (!new_pp) new_pp = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + newChar.pp_id + '_quantity', current: 0});
 
                 // Transfer custom currency to original currency attributes
-                var cp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['cp'] })[0];
-                var sp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['sp'] })[0];
-                var ep = findObjs({ type: 'attribute', characterid: char_id, name: attributes['ep'] })[0];
-                var gp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['gp'] })[0];
-                var pp = findObjs({ type: 'attribute', characterid: char_id, name: attributes['pp'] })[0];
+                var cp = findObjs({ type: 'attribute', characterid: char_id, name: 'pursestrings_cp' })[0];
+                var sp = findObjs({ type: 'attribute', characterid: char_id, name: 'pursestrings_sp' })[0];
+                var ep = findObjs({ type: 'attribute', characterid: char_id, name: 'pursestrings_ep' })[0];
+                var gp = findObjs({ type: 'attribute', characterid: char_id, name: 'pursestrings_gp' })[0];
+                var pp = findObjs({ type: 'attribute', characterid: char_id, name: 'pursestrings_pp' })[0];
                 var eq = findObjs({ type: 'attribute', characterid: char_id, name: 'pursestrings_purse_id' })[0];
 
                 var coins = cp.get('current') + 'cp, ' + sp.get('current') + 'sp, ' + ep.get('current') + 'ep, ' + gp.get('current') + 'gp, ' + pp.get('current') + 'pp';

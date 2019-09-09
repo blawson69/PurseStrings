@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.0',
+    var version = '5.1',
     debugMode = false,
     styles = {
         list:  'list-style-type: circle; margin-left: 4px; list-style-position: inside;',
@@ -114,6 +114,11 @@ var PurseStrings = PurseStrings || (function () {
                     case '--upgrade':
   						if (playerIsGM(msg.playerid)) {
   							commandUpgrade();
+  						}
+  						break;
+                    case '--update-merchant':
+  						if (playerIsGM(msg.playerid)) {
+  							commandUpdateMerch(msg.selected);
   						}
   						break;
                     case '--give':
@@ -695,6 +700,22 @@ var PurseStrings = PurseStrings || (function () {
             }
         });
         return inv;
+    },
+
+    commandUpdateMerch = function (selected) {
+        // Updates a merchant character with its default token
+        if (!selected || selected.length > 1) {
+            adminDialog('Update Merchant Error', 'You may only select one token at a time.');
+        } else {
+            var merch_token = getObj(selected[0]._type, selected[0]._id);
+            if (merch_token) {
+                var merch_char = getObj('character', merch_token.get('represents'));
+                if (merch_char && isMerchant(merch_token.get('id'))) {
+                    setDefaultTokenForCharacter(merch_char, merch_token);
+                    adminDialog('Update Successful', 'Merchant ' + merch_char.get('name') + '\'s default token has been updated.');
+                }
+            }
+        }
     },
 
 	parseCoins = function (cmds) {

@@ -55,7 +55,7 @@ Alchemist's Fire|50gp|2
 ```
 If a Merchant buys an item from a player that is not already in their inventory, it will be added to the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price on new items will be double the amount at which it was purchased. Updates to inventory outside of purchases may be done by editing the GM Notes field. See the [`--buy` command](#--buy) for options and information.
 
-> **Upgrade Notice:** If you have used a previous version of PurseStrings and wish to continue to use a character as a Merchant, you *must* move all inventory into a token after upgrading to this version. This can be the character's default token, but be aware that updating the inventory for the default token will be a *manual process.* PurseStrings cannot update a default token, so you will need to edit your character and replace the current default with the token on the VTT that contains the latest version of inventory.
+**Note:** If you have used a previous version of PurseStrings or wish to use a character as a Merchant, you must make the Merchant token the *default token* for the character. Any time the token's inventory on the VTT changes, you will need to use the [`--update-merchant` command](#--update-merchant) **before** removing the token if you wish to retain those changes.
 
 ## Syntax
 
@@ -75,6 +75,7 @@ If a Merchant buys an item from a player that is not already in their inventory,
 - **[--give](#--give)** <_giver_id_> <_taker_id_> <_coinage_>
 - **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_> <_item_>
 - **[--invlist](#--invlist)** <_merchant_id_>
+- **[--update-merchant](#--update-merchant)**
 
 ---
 ### --help
@@ -203,7 +204,15 @@ The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code
 
 `!ps --invlist <merchant_id>`
 
-This generates a dialog with the merchant's inventory/menu and provides the item name, price, and a link the player's can use to make the purchase.
+This generates a dialog with the Merchant's inventory/menu and provides the item name, price, and a link the player's can use to make the purchase.
+
+---
+### --update-merchant
+**GM Only** For characters you wish to use as a Merchant (rather than multiple Merchant tokens sharing the same character), you set the character's default token as the one that contains the Merchant's Inventory. In this manner, a Merchant can be quickly moved to the VTT from the Journal. However, to maintain a current Inventory, the `--update-merchant` command must be used on the selected Merchant token before it is removed from the VTT.
+
+`!ps --update-merchant`
+
+This command is not necessary if the desire is to have the Merchant's Inventory "reset" after some arbitrary period of time.
 
 ## Notes
 

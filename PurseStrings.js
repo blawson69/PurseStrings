@@ -12,7 +12,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.1',
+    var version = '5.2',
     debugMode = false,
     styles = {
         list:  'list-style-type: circle; margin-left: 4px; list-style-position: inside;',
@@ -722,7 +722,7 @@ var PurseStrings = PurseStrings || (function () {
 		// Parses the input for the coin string and returns it as an array or null if error
 		var coins = null, tmpcoins = {cp:0,sp:0,ep:0,gp:0,pp:0},
 		regex = /[:]+/i,
-		cmdString = cmds.toString().replace(/,/g, "").replace(/\s+([cp|sp|ep|gp|pp])/gi, '$1').split(/\s+/);
+		cmdString = cmds.toString().toLowerCase().replace(/,/g, "").replace(/\s+([cp|sp|ep|gp|pp])/gi, '$1').split(/\s+/);
 		if (regex.test(cmds)) {
 			// Coins sent as cp:sp:ep:gp:pp
 			_.each(cmdString, function (cmd) {
@@ -1068,13 +1068,13 @@ var PurseStrings = PurseStrings || (function () {
 				pp.setWithWorker({ current: purse['pp'] });
 			} else {
 				result = false;
-				adminDialog('Change Purse Error', 'No coinage was indicated or coinage syntax was incorrect.');
+				log('PurseStrings: No coinage was indicated or coinage syntax was incorrect.');
 			}
 		} else {
 			result = false;
             var character = getObj('character', char_id);
             if (character) {
-                adminDialog('PurseStrings Error', character.get('name') + ' has not been set up for PurseStrings! Please use !ps --setup');
+                log('PurseStrings: ' + character.get('name') + ' has not been set up for PurseStrings.');
             }
 		}
 		return result;
@@ -1336,7 +1336,9 @@ var PurseStrings = PurseStrings || (function () {
 
     return {
 		checkInstall: checkInstall,
-		registerEventHandlers: registerEventHandlers
+		registerEventHandlers: registerEventHandlers,
+        changePurse: changePurse,
+        version: version
 	};
 }());
 

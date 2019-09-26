@@ -203,7 +203,3 @@ This generates a dialog with the Merchant's inventory/menu and provides the item
 `!ps --update-merchant`
 
 This command is not necessary if the name of the Merchant token is the same as the character's, or if you otherwise have reason not to update inventory on the character.
-
-## Notes
-
-PurseStrings was developed on Shaped Sheet version 19.1.3 but should work with many previous versions as well.

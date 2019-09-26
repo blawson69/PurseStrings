@@ -1,5 +1,5 @@
 # PurseStrings
-> Now supporting the 5th Edition OGL Sheet as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
+> Now supports the **D&D 5th Edition OGL Sheet** as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
@@ -58,7 +58,7 @@ If a Merchant buys an item from a player that is not already in their inventory,
 
 ### Characters as Merchants
 If you wish to use a character as a Merchant (as in previous versions of PurseStrings), you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
-- If the Merchant token's name is the same as the character's name, the default token will be updated whenever inventory changes.
+- If the Merchant token's name is the same as the character's name, the default token will automatically be updated whenever inventory changes.
 - If the names do not match, you will need to update the default token manually using the [`--update-merchant` command](#--update-merchant) **before** removing the token from the VTT.
 
 ## Syntax
@@ -174,7 +174,7 @@ As with the `--subt` command ([above](#--subt)), the exchange will fail if the a
 
 ---
 ### --buy
-Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a NPC that has been set up as a Merchant ([see above](#merchants-setup)). Note that this *does not* add items to a player character's sheet, it only deals with the money.
+Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a NPC that has been set up as a Merchant ([see above](#merchant-setup)). Note that this *does not* add items to a player character's sheet, it only deals with the money.
 
 To exchange money for an item or service, you use the `--buy` command along with the IDs of tokens representing both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. Also required is the amount for which the item is being sold using `--amt|<coinage>`, and the name of the item using `--item|<item_name>`.
 
@@ -190,7 +190,7 @@ The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code
 
 ---
 ### --invlist
-**GM Only** You can display a Merchant's Inventory (see [setup instructions](#merchants-setup) above) using the `--invlist` command followed by the Merchant token's ID:
+**GM Only** You can display a Merchant's Inventory (see [setup instructions](#merchant-setup) above) using the `--invlist` command followed by the Merchant token's ID:
 
 `!ps --invlist <merchant_id>`
 

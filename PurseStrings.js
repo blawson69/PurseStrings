@@ -36,18 +36,16 @@ var PurseStrings = PurseStrings || (function () {
         if (typeof state['PURSESTRINGS'].pursed == 'undefined') state['PURSESTRINGS'].pursed = [];
         if (typeof state['PURSESTRINGS'].partyMembers == 'undefined') state['PURSESTRINGS'].partyMembers = [];
         if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
-        log('detectSheet = ' + detectSheet());
+
         if (typeof state['PURSESTRINGS'].sheet == 'undefined') {
             var message, sheet = detectSheet();
             if (sheet == 'Unknown') {
                 message = 'PurseStrings was unable to detect the character sheet for your game! You must be using either the 5e Shaped Sheet or the 5th Edition OGL Sheet. Please indicate which sheet you are using.';
+                message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --sheet ?{Choose Sheet|5e Shaped|5th Edition OGL}">SET SHEET</a></div>';
+                adminDialog('Configuration Notice', message);
             } else {
                 state['PURSESTRINGS'].sheet = sheet;
-                message = 'PurseStrings has detected your sheet as "' + sheet + ' Sheet". <i>If this is incorrect</i>, please use the button to set it correctly.';
             }
-            message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --sheet ?{Choose Sheet|5e Shaped|5th Edition OGL}">SET SHEET</a></div>';
-
-            adminDialog('Configuration Notice', message);
         }
         log('--> PurseStrings v' + version + ' <-- Initialized');
 

@@ -1,5 +1,5 @@
 # PurseStrings
-> Now supports the **D&D 5th Edition OGL Sheet** as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
+> ⭐️ Now supports the **D&D 5th Edition OGL Sheet** as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 

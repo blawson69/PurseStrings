@@ -1,5 +1,5 @@
 # PurseStrings
-> ⭐️ Now supports the **D&D 5th Edition OGL Sheet** as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
+> Now supports the **D&D 5th Edition OGL Sheet** as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
@@ -19,12 +19,12 @@ You can [add characters](#--party) to a Party Members list which persists across
 
 ## Merchant Setup
 Merchants are NPCs that have items or services to sell. A Merchant has two requirements:
-1. It must be a **token** that contains the Merchant's inventory (below) in the token's GM Notes, and
+1. It must be a **token** that contains the Merchant's Inventory (below) in the token's GM Notes, and
 2. The token must represent a Character that has been [set up](#--setup) with PurseStrings.
 
 As it is not required for the Merchant token to be the default token of the character, you have more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions. If you wish to use a character as a Merchant, [see below](#characters-as-merchants).
 
-You can now allow a Merchant's Inventory to override the [default show stock setting](#--stock) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.
+You can allow a Merchant's Inventory to override the [default show stock setting](#--stock) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.
 
 To create a Merchant, follow the instructions below.
 1. Select and Edit a token you wish to represent your Merchant.
@@ -58,7 +58,7 @@ If a Merchant buys an item from a player that is not already in their inventory,
 
 ### Characters as Merchants
 If you wish to use a character as a Merchant (as in previous versions of PurseStrings), you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
-- If the Merchant token's name is the same as the character's name, the default token will automatically be updated whenever inventory changes.
+- If the Merchant token's name is the same as the character's name, the default token will automatically be updated whenever inventory changes. Be aware that all other token settings will be saved, including rotation, status markers, auras, etc.
 - If the names do not match, you will need to update the default token manually using the [`--update-merchant` command](#--update-merchant) **before** removing the token from the VTT.
 
 ## Syntax

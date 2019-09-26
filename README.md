@@ -1,8 +1,9 @@
 # PurseStrings
+> Now supporting the 5th Edition OGL Sheet as well as the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped)!
 
-This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters using the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped) with the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
+This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
-> This version of PurseStrings contains a *significant* update to the [Merchant Inventory system](#merchant-setup) (from v3.1) and subsequently the parameter syntax for the [`--give`](#--give) and [`--buy`](#--buy) commands. If you have used a previous version of this script, please pay close attention to the following documentation for changes you will need to make to any characters and/or macros you may be using.
+**Note:** Version 5.3 now evenly calculates the division of loot when distributing to Party Members. As this has eliminated leftover loot and the need for the `--drop` configuration setting, it has been removed from documentation and the in-game configuration dialog.
 
 ## Coinage
 PurseStrings is fairly flexible in the way it accepts coinage through the various commands. It can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest (cp, sp, ep, gp, pp) with zeros for placeholders.
@@ -14,14 +15,14 @@ All of the examples below represent 30cp and 4gp:
 - 30:0:0:4:0
 
 ## Party Members
-You can [add characters](#--party) to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. This only applies to the use of the `--dist` command [below](#--dist). Giving individual characters money still requires that the character(s) token(s) be selected.
+You can [add characters](#--party) to a Party Members list which persists across sessions. This makes the distribution of loot easy, as it eliminates the need for selecting multiple tokens. This only applies to the use of the `--dist` command [below](#--dist). Giving individual characters money still requires that the character(s) token(s) be selected. Characters must be [set up](#--setup) with PurseStrings before adding them to the Party Members list.
 
 ## Merchant Setup
 Merchants are NPCs that have items or services to sell. A Merchant has two requirements:
 1. It must be a **token** that contains the Merchant's inventory (below) in the token's GM Notes, and
 2. The token must represent a Character that has been [set up](#--setup) with PurseStrings.
 
-This allows for more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions.
+As it is not required for the Merchant token to be the default token of the character, you have more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions. If you wish to use a character as a Merchant, [see below](#characters-as-merchants).
 
 You can now allow a Merchant's Inventory to override the [default show stock setting](#--stock) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.
 
@@ -55,7 +56,10 @@ Alchemist's Fire|50gp|2
 ```
 If a Merchant buys an item from a player that is not already in their inventory, it will be added to the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price on new items will be double the amount at which it was purchased. Updates to inventory outside of purchases may be done by editing the GM Notes field. See the [`--buy` command](#--buy) for options and information.
 
-**Note:** If you have used a previous version of PurseStrings or wish to use a character as a Merchant, you must make the Merchant token the *default token* for the character. Any time the token's inventory on the VTT changes, you will need to use the [`--update-merchant` command](#--update-merchant) **before** removing the token if you wish to retain those changes.
+### Characters as Merchants
+If you wish to use a character as a Merchant (as in previous versions of PurseStrings), you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
+- If the Merchant token's name is the same as the character's name, the default token will be updated whenever inventory changes.
+- If the names do not match, you will need to update the default token manually using the [`--update-merchant` command](#--update-merchant) **before** removing the token from the VTT.
 
 ## Syntax
 
@@ -65,7 +69,6 @@ If a Merchant buys an item from a player that is not already in their inventory,
 - **[--help](#--help)**
 - **[--config](#--config)**
 - **[--setup](#--setup)**
-- **[--drop](#--drop)**
 - **[--stock](#--stock)**
 - **[--party](#--party)**
 - **[--show](#--show)**
@@ -85,28 +88,19 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 
 ---
 ### --config
-**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party) and your **[drop](#--drop)** and **[stock](#--stock)** options. The config menu will give a link to change these variables as well as a link to add Party Members.
+**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party), the **[stock](#--stock)** setting, and a link to add Party Members.
 
 `!ps --config`
 
 ---
 ### --setup
-**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command registers each character with the script and adds a token action for calling the `--show` command ([below](#--show)) to view their Purse:
+**GM Only** The GM must setup all player characters and relevant NPCs before using PurseStrings. Select each token representing the character(s) you want to setup and run the following command. This command registers each character with the script, ensures the proper currency attributes exist, and adds a token action for calling the `--show` command ([below](#--show)) to view their Purse:
 
 `!ps --setup`
 
 If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to every selected character. The following adds 50cp, 20sp, and 10gp to each selected character:
 
 `!ps --setup 50:20:0:10:0`
-
----
-### --drop
-**GM Only** The GM can change the way loot is distributed ([below](#--dist)) using the `--drop` command. Set it to "true" if you want the leftover coinage to be dropped so your players can decide amongst themselves who should receive the remainder, or "false" to automatically give it to a random Party Member. The default value is "false." A link to toggle this setting is included in the `--config` dialog ([above](#--config)).
-
-```
-!ps --drop true
-!ps --drop false
-```
 
 ---
 ### --stock
@@ -172,9 +166,7 @@ Equivalences are used when determining what coins are removed. For instance, if 
 
 ---
 ### --give
-Characters can exchange money between themselves. You must send a token ID that represents both the giving character and the taking (receiving) character along with the amount being given.
-
-> **Upgrade Notice:** This command has changed from previous versions of PurseStrings. The command syntax is now *significantly* different. Also, the giver ID *must* be the ID of a token representing a character. The taker ID can be either a token ID or a character ID for instances where a character acts as a "bank" for the Party.
+Characters can exchange money between themselves. You must send a token ID that represents both the giving character and the taking (receiving) character along with the amount being given. If you have a character that acts as a "bank" for the Party and does not have a token on the VTT, you can pass the character ID as a *taker only*.
 
 `!ps --give --giver|<giver_id> --taker|<taker_id> --amt|50gp`
 
@@ -183,8 +175,6 @@ As with the `--subt` command ([above](#--subt)), the exchange will fail if the a
 ---
 ### --buy
 Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a NPC that has been set up as a Merchant ([see above](#merchants-setup)). Note that this *does not* add items to a player character's sheet, it only deals with the money.
-
-> **Upgrade Notice:** This command has changed from previous versions of PurseStrings. The command syntax is now *significantly* different. Also, where you sent a character ID before, you *must* send a token ID representing that character. This change was implemented to prevent confusion with the updates to the Merchant Inventory system.
 
 To exchange money for an item or service, you use the `--buy` command along with the IDs of tokens representing both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. Also required is the amount for which the item is being sold using `--amt|<coinage>`, and the name of the item using `--item|<item_name>`.
 
@@ -208,11 +198,11 @@ This generates a dialog with the Merchant's inventory/menu and provides the item
 
 ---
 ### --update-merchant
-**GM Only** For characters you wish to use as a Merchant (rather than multiple Merchant tokens sharing the same character), you set the character's default token as the one that contains the Merchant's Inventory. In this manner, a Merchant can be quickly moved to the VTT from the Journal. However, to maintain a current Inventory, the `--update-merchant` command must be used on the selected Merchant token before it is removed from the VTT.
+**GM Only** For characters you wish to use as a Merchant rather than multiple Merchant tokens sharing the same character ([see above](#characters-as-merchants)), you set the character's default token as the one that contains the Merchant's Inventory. In this manner, a Merchant can be quickly moved to the VTT from the Journal. Inventory will be updated automatically if the name on the default token is the same as the character's name. To update manually, use the `--update-merchant` command on the selected Merchant token **before** it is removed from the VTT.
 
 `!ps --update-merchant`
 
-This command is not necessary if the desire is to have the Merchant's Inventory "reset" after some arbitrary period of time.
+This command is not necessary if the name of the Merchant token is the same as the character's, or if you otherwise have reason not to update inventory on the character.
 
 ## Notes
 

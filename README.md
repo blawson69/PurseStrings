@@ -56,6 +56,9 @@ Alchemist's Fire|50gp|2
 ```
 If a Merchant buys an item from a player that is not already in their inventory, it will be added to the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price on new items will be double the amount at which it was purchased. Updates to inventory outside of purchases may be done by editing the GM Notes field. See the [`--buy` command](#--buy) for options and information.
 
+**Advice on GM Notes**
+The GM Notes field is a [WYSIWYG](https://en.wikipedia.org/wiki/WYSIWYG) editor, and cutting and pasting from the web or a word processor like Google Docs, Microsoft Word or Pages will carry over formatting which causes problems in processing your Inventory. If you want to create inventory without typing it directly into the GM Notes field, it **must** come directly from a *text editor*. Either cut from your original source (the web, word processor, etc.) and paste into a text editor *first*, or create the content in the text editor itself. Then cut from the text editor and past into the GM Notes field.
+
 ### Characters as Merchants
 If you wish to use a character as a Merchant (as in previous versions of PurseStrings), you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
 - If the Merchant token's name is the same as the character's name, the default token will automatically be updated whenever inventory changes. Be aware that all other token settings will be saved, including rotation, status markers, auras, etc.

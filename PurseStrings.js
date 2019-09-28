@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.3',
+    var version = '5.3.1',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -599,12 +599,12 @@ var PurseStrings = PurseStrings || (function () {
                     if (notes && notes[0].match(/^PurseStrings (Inventory|Menu)$/) !== null) {
                         var label = notes[0].replace('PurseStrings ', '');
                         notes.shift();
-                        var invList = '&{template:5e-shaped} {{title=' + token.get('name') + '\'s ' + label + '}} {{content=';
+                        var invList = '';
                         var inv = parseInventory(notes);
                         if (inv && inv.length > 0) {
                             var cats = _.uniq(_.pluck(inv, 'category'));
                             _.each(cats, function (cat) {
-                                invList += '<b style="font-size: 1.25em;">' + cat + '</b><ul style="' + styles.list + '">';
+                                invList += '<b style="font-size: 1.125em;">' + cat + '</b><ul style="' + styles.list + '">';
                                 let thisCat = _.filter(inv, function (item) { return item.category == cat; });
                                 _.each(thisCat, function (item) {
                                     if (showStock === true) {
@@ -625,10 +625,9 @@ var PurseStrings = PurseStrings || (function () {
                         } else {
                             invList += '<i>No inventory found!</i>';
                         }
-                        invList += '}} ';
 
-                        if (whispers(msg)) sendChat(token.get('name'), '/w GM ' + invList, null, {noarchive:true});
-                        else sendChat(token.get('name'), invList);
+                        if (whispers(msg)) adminDialog(token.get('name') + '\'s ' + label, invList);
+                        else showDialog(token.get('name') + '\'s ' + label, '', invList, '', false);
                     } else {
                         adminDialog('Inventory Error', 'Merchant has no inventory!');
                     }

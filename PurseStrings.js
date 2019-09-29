@@ -1134,7 +1134,6 @@ var PurseStrings = PurseStrings || (function () {
     processGMNotes = function (notes) {
         var retval, text = unescape(notes).trim();
         text = text.replace(/<p[^>]*>/gi, '<p>').replace(/<\/?(span|div|b|i)[^>]*>/gi, '');
-        log('text = ' + text);
         if (text != '') retval = text.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
         return retval;
     },

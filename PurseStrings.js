@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.4',
+    var version = '5.4.1',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -1133,7 +1133,7 @@ var PurseStrings = PurseStrings || (function () {
 
     processGMNotes = function (notes) {
         var retval, text = unescape(notes).trim();
-        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/<\/?(span|div|b|i)[^>]*>/gi, '');
+        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/\n(<p>)?/gi, '</p><p>').replace(/<\/?(span|div|pre|code|b|i)[^>]*>/gi, '');
         if (text != '') retval = text.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
         return retval;
     },

@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.3.1',
+    var version = '5.4',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -595,7 +595,7 @@ var PurseStrings = PurseStrings || (function () {
                 if (token.get('bar1_value').trim() == 'hide-stock') showStock = false;
                 merchant = getObj('character', token.get('represents'));
                 if (merchant && isPursed(merchant.get('id'))) {
-                    var notes = decodeEditorText(token.get('gmnotes'), {asArray:true});
+                    var notes = processGMNotes(token.get('gmnotes'));
                     if (notes && notes[0].match(/^PurseStrings (Inventory|Menu)$/) !== null) {
                         var label = notes[0].replace('PurseStrings ', '');
                         notes.shift();
@@ -647,7 +647,7 @@ var PurseStrings = PurseStrings || (function () {
         //Updates the inventory for a Merchant
         var label, desc = desc.split('~'), token = getObj('graphic', token_id), add = (action == 'add') ? true : false;
         if (token) {
-            var notes = decodeEditorText(token.get('gmnotes'), {asArray:true});
+            var notes = processGMNotes(token.get('gmnotes'));
             var merchant = getObj('character', token.get('represents'));
             if (notes && merchant && isPursed(merchant.get('id'))) {
                 label = notes[0].replace('PurseStrings ', '');
@@ -782,7 +782,7 @@ var PurseStrings = PurseStrings || (function () {
         var token = getObj('graphic', token_id);
         if (token) {
             var char = getObj('character', token.get('represents'));
-            var notes = decodeEditorText(token.get('gmnotes'), {asArray:true});
+            var notes = processGMNotes(token.get('gmnotes'));
             if (typeof char !== 'undefined' && typeof notes == 'object' && notes[0].match(/^PurseStrings (Inventory|Menu)$/) !== null) {
                 isMerch = true;
             }
@@ -1126,56 +1126,16 @@ var PurseStrings = PurseStrings || (function () {
 
     whispers = function (cmds) {
         // Returns whether or not "--whisper" was sent
-        var result = false, regex = /\-\-whisper/i,
-        cmdString = cmds.toString().split(/\s+/);
-
-        if (regex.test(cmds)) {
-            result = true;
-        }
-
+        var result = false, regex = /\-\-whisper/i;
+        if (regex.test(cmds)) result = true;
         return result;
     },
 
-    decodeEditorText = function (t, o) {
-        // Strips the editor encoding from GMNotes (thanks to The Aaron!)
-        let w = t;
-        o = Object.assign({ separator: '\r\n', asArray: false }, o);
-        /* Token GM Notes */
-        if (/^%3Cp%3E/.test(w)) {
-            w = unescape(w);
-        }
-        if (/^<p>/.test(w)) {
-            let lines = w.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
-            return o.asArray ? lines : lines.join(o.separator);
-        }
-        /* neither */
-        return t;
+    processGMNotes = function (notes) {
+        var text = unescape(notes);
+        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/<\/?(span|div|b|i)[^>]*>/gi, '');
+        return text.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
     },
-
-    esRE = function (s) {
-        var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
-        return s.replace(escapeForRegexp,"\\$1");
-    },
-
-    HE = (function() {
-        var entities={
-                //' ' : '&'+'nbsp'+';',
-                '<' : '&'+'lt'+';',
-                '>' : '&'+'gt'+';',
-                "'" : '&'+'#39'+';',
-                '@' : '&'+'#64'+';',
-                '{' : '&'+'#123'+';',
-                '|' : '&'+'#124'+';',
-                '}' : '&'+'#125'+';',
-                '[' : '&'+'#91'+';',
-                ']' : '&'+'#93'+';',
-                '"' : '&'+'quot'+';'
-            },
-            re = new RegExp('('+_.map(_.keys(entities),esRE).join('|')+')','g');
-        return function(s){
-            return s.replace(re, function(c){ return entities[c] || c; });
-        };
-    }()),
 
     generateUUID = (function () {
         "use strict";

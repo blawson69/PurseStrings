@@ -103,7 +103,7 @@ You can also override this value individually on each Merchant token. To do so, 
 #### Recording Purchases
 When a player character purchases an item from a Merchant, PurseStrings can record the purchase to the character's sheet for later reference. For the 5e Shaped sheet, it is recorded in the Miscellaneous Notes field near the bottom. For the 5th Edition OGL sheet, it is recorded in the Treasure field in the Bio tab. This applies only to Inventory items that do not have an infinite availability.
 
-The script will add a line beginning with "PURCHASED ITEMS:" followed by a list of all items purchased. Multiple items will have a number in parenthesis corresponding to how many have been purchased. This function ignores all other text in the field.
+The script will add a line beginning with "PURCHASED ITEMS:" followed by a list of all items purchased. Multiple items will have a number in parentheses corresponding to how many have been purchased. This function ignores all other text in the field.
 
 The default is to record purchases.
 

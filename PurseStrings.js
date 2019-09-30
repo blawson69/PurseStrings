@@ -322,20 +322,6 @@ var PurseStrings = PurseStrings || (function () {
         commandConfig(msg);
     },
 
-    commandShowStock = function (msg) {
-        // Set the cross-session default falue of showStock
-        var regex = /true|yes|sure|yep/i,
-        cmdString = msg.toString();
-
-        if (regex.test(cmdString)) {
-            state['PURSESTRINGS'].showStock = true;
-        } else {
-            state['PURSESTRINGS'].showStock = false;
-        }
-
-        commandConfig(msg);
-    },
-
     commandPursed = function () {
         // Displays a list of character names who have been set up with PurseStrings
         var message = 'The following characters have been set up with PurseStrings.<br><br>You may remove one by clicking the ❌ next to their name. This will also delete them from the Party Members list but <b>will not</b> remove any currency from their character sheet.<ul>';

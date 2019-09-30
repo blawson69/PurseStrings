@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.4.1',
+    var version = '5.5',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -36,6 +36,7 @@ var PurseStrings = PurseStrings || (function () {
         if (typeof state['PURSESTRINGS'].pursed == 'undefined') state['PURSESTRINGS'].pursed = [];
         if (typeof state['PURSESTRINGS'].partyMembers == 'undefined') state['PURSESTRINGS'].partyMembers = [];
         if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
+        if (typeof state['PURSESTRINGS'].recPurchases == 'undefined') state['PURSESTRINGS'].recPurchases = true;
 
         if (typeof state['PURSESTRINGS'].sheet == 'undefined') {
             var message, sheet = detectSheet();
@@ -347,7 +348,13 @@ var PurseStrings = PurseStrings || (function () {
 
     commandConfig = function (msg) {
         // Config dialog with links to make changes
-        var message = '';
+        var message = '', parms = msg.trim().split(/\s*\-\-/i);
+        _.each(parms, function (x) {
+            var parts = x.split(/\s*\|\s*/i);
+            if (parts[0] == 'stock') state['PURSESTRINGS'].showStock = !state['PURSESTRINGS'].showStock;
+            if (parts[0] == 'np') state['PURSESTRINGS'].recPurchases = !state['PURSESTRINGS'].recPurchases;
+        });
+
         if (typeof state['PURSESTRINGS'].sheet == 'undefined' || state['PURSESTRINGS'].sheet == 'Unknown') {
             message += '<p style=\'' + styles.alert + '\'>⚠️ Unknown character sheet!</p>';
             message += '<p>PurseStrings was unable to detect the character sheet for your game. You must be using either the 5e Shaped Sheet or the 5th Edition OGL Sheet. Please tell PurseStrings what character sheet is in use before you can continue using the script.</p><br>';
@@ -358,11 +365,18 @@ var PurseStrings = PurseStrings || (function () {
             message += 'You currently have ' + _.size(state['PURSESTRINGS'].pursed) + ' characters set up for use with PurseStrings. <a style=\'' + styles.textButton + '\' href="!ps --pursed">Show list</a>.';
 
             message += '<br><br><div style=\'' + styles.title + '\'>Default Settings</div>';
-            message += '<span style=\'' + styles.bigger + '\'>Merchant stock:</span> Default is currently set to be ';
+            message += '<span style=\'' + styles.bigger + '\'>Merchant Stock:</span> The quantity of a Merchant\'s Inventory items is set to be ';
             if (state['PURSESTRINGS'].showStock) {
-                message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --stock false">Change</a>';
+                message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --config --stock|toggle">Change</a>';
             } else {
-                message += 'hidden from players, with "out of stock" items not being displayed in the list. <a style=\'' + styles.textButton + '\' href="!ps --stock true">Change</a>';
+                message += 'hidden from players, with "out of stock" items not being displayed in the list. <a style=\'' + styles.textButton + '\' href="!ps --config --stock|toggle">Change</a>';
+            }
+
+            message += '<br><br><span style=\'' + styles.bigger + '\'>Recording Purchases:</span> Item purchases from a Merchant ';
+            if (state['PURSESTRINGS'].recPurchases) {
+                message += 'will automatically be recorded to the character sheet\'s ' + (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a>';
+            } else {
+                message += 'will not be recorded automatically on the character sheet. Players will need to record purchases manually. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a>';
             }
 
             message += '<br><br><div style=\'' + styles.title + '\'>Party Members</div>';
@@ -500,6 +514,7 @@ var PurseStrings = PurseStrings || (function () {
                             updateInventory(buyer_token_id, item, amount, 'add');
                             adminDialog('Purchase Successful', buyer_token_name + ' paid ' + seller.get('name') + ' ' + amount + ' for one ' + desc + '.');
                         } else {
+                            if (!isService(seller_token_id, desc) && state['PURSESTRINGS'].recPurchases) recordPurchase(buyer.get('id'), desc);
                             showDialog('Purchase Successful', buyer.get('name'), 'You paid ' + seller_token_name + ' ' + amount + ' for one ' + desc + '.', buyer.get('name'), true);
                         }
 
@@ -582,6 +597,66 @@ var PurseStrings = PurseStrings || (function () {
         take.cp = parseInt(tmpLoot.cp / count);
 
         return take;
+    },
+
+    recordPurchase = function (char_id, new_item) {
+        var purchased, items = '', tmpItems;
+        var field = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure') })[0];
+        if (!field) field = createObj("attribute", {characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure'), current: ''});
+
+        var notes = field.get('current');
+        purchased = _.find(notes.split(/\n/), function (x) { return x.startsWith('PURCHASED ITEMS:'); });
+        if (purchased) items = purchased.replace('PURCHASED ITEMS:', '').trim();
+        items = items.split(/\s*,\s*/);
+        tmpItems = denumerateItems(items);
+        //tmpItems.push(new_item);
+        items = enumerateItems(tmpItems.push(new_item));
+        items = _.filter(enumerateItems(tmpItems), function (x) { return x != ''; });
+        if (notes.search(/^PURCHASED ITEMS\:\s.*$/m) == -1) {
+            notes = (notes == '') ? 'PURCHASED ITEMS: ' + items.join(', ') : notes + '\n\nPURCHASED ITEMS: ' + items.join(', ');
+        } else {
+            notes = notes.replace(/^PURCHASED ITEMS\:\s(.*)$/m, 'PURCHASED ITEMS: ' + items.join(', '));
+        }
+        field.set({ current: notes });
+    },
+
+    denumerateItems = function (items) {
+        // Takes an array of enumerated items and expands it by count
+        var tmpItems = [], re = /^[^\(]+\(\d+\)$/;
+        _.each(items, function (item) {
+            if (item.match(re)) {
+                var count = item.replace(/^[^\(]+\((\d+)\)$/, '$1');
+                for (var x = 0; x < count; x++) {
+                    tmpItems.push(item.replace(' (' + count + ')', ''));
+                }
+            } else {
+                tmpItems.push(item);
+            }
+        });
+        return tmpItems;
+    },
+
+    enumerateItems = function (items) {
+        // Collects multiple instances into one instance with an item count
+        var uniqItems, retItems = [], count;
+        uniqItems = _.uniq(items);
+        _.each(uniqItems, function(item) {
+            count = _.size(_.filter(items, function (x) { return x == item; }));
+            if (count > 1) retItems.push(item + ' (' + count + ')');
+            else retItems.push(item);
+        });
+        return retItems;
+    },
+
+    isService = function (token_id, test_item) {
+        var isServ = false, notes, item, token = getObj('graphic', token_id);
+        notes = processGMNotes(token.get('gmnotes'));
+        item = _.find(notes, function (x) { return x.startsWith(test_item); });
+        if (item) {
+            item = item.split(/\s*\|\s*/);
+            if (item[2] == '') isServ = true;
+        }
+        return isServ;
     },
 
     commandInventory = function (msg) {

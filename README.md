@@ -3,7 +3,7 @@
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
-**Note:** Version 5.3 now evenly calculates the division of loot when distributing to Party Members. As this has eliminated leftover loot and the need for the `--drop` configuration setting, it has been removed from documentation and the in-game configuration dialog.
+This script is for use with the D&D 5th Edition OGL Sheet or the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped).
 
 ## Coinage
 PurseStrings is fairly flexible in the way it accepts coinage through the various commands. It can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest (cp, sp, ep, gp, pp) with zeros for placeholders.
@@ -24,7 +24,7 @@ Merchants are NPCs that have items or services to sell. A Merchant has two requi
 
 As it is not required for the Merchant token to be the default token of the character, you have more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions. If you wish to use a character as a Merchant, [see below](#characters-as-merchants).
 
-You can allow a Merchant's Inventory to override the [default show stock setting](#--stock) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.
+You can allow a Merchant's Inventory to override the [default setting](#--config) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.
 
 To create a Merchant, follow the instructions below.
 1. Select and Edit a token you wish to represent your Merchant.
@@ -57,7 +57,7 @@ Alchemist's Fire|50gp|2
 If a Merchant buys an item from a player that is not already in their inventory, it will be added to the list. It is assumed that Merchants will buy at half their selling cost, so the inventory price on new items will be double the amount at which it was purchased. Updates to inventory outside of purchases may be done by editing the GM Notes field. See the [`--buy` command](#--buy) for options and information.
 
 **Advice on GM Notes**
-The GM Notes field is a [WYSIWYG](https://en.wikipedia.org/wiki/WYSIWYG) editor, and cutting and pasting from the web or a word processor like Google Docs, Microsoft Word or Pages will carry over formatting which causes problems in processing your Inventory. If you want to create inventory without typing it directly into the GM Notes field, it **must** come directly from a *text editor*. Either cut from your original source (the web, word processor, etc.) and paste into a text editor *first*, or create the content in the text editor itself. Then cut from the text editor and past into the GM Notes field.
+The GM Notes field is a [WYSIWYG](https://en.wikipedia.org/wiki/WYSIWYG) editor, and cutting and pasting from the web or a word processor like Google Docs, Microsoft Word or Pages can carry over formatting which causes problems in processing your Inventory. If you are having problems with inventory showing in chat, try cutting from your original source (the web, word processor, etc.) and paste into a text editor *first*, or create the content in the text editor itself. Then cut from the text editor and past into the GM Notes field.
 
 ### Characters as Merchants
 If you wish to use a character as a Merchant (as in previous versions of PurseStrings), you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
@@ -91,9 +91,23 @@ Whispers a PurseStrings help dialog in the chat window. It gives relative comman
 
 ---
 ### --config
-**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party), the **[stock](#--stock)** setting, and a link to add Party Members.
+**GM Only** This gives you a short dialog menu with all of the PurseStrings configuration options so you can customize it for your game. It displays a list of your [Party Members](#--party), links to change the default settings, and a link to add Party Members.
 
 `!ps --config`
+
+#### Merchant Stock
+When a merchant's inventory is displayed, you can choose to whether or not to show the quantity of each item. When you show quantities, out-of-stock items (quantity of zero) will display "out of stock." If you are hiding quantities, the out-of-stock items will not be not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchant-setup)) will always be shown and will never display any quantity regardless of the this setting.
+
+You can also override this value individually on each Merchant token. To do so, simply add "show-stock" or "hide-stock" to the first Bar 1 box on the token.
+
+ Default is to show quantities.
+
+#### Recording Purchases
+When a player character purchases an item from a Merchant, PurseStrings can record the purchase to the character's sheet for later reference. For the 5e Shaped sheet, it is recorded in the Miscellaneous Notes field near the bottom. For the 5th Edition OGL sheet, it is recorded in the Treasure field in the Bio tab. This applies only to Inventory items that do not have an infinite availability.
+
+The script will add a line beginning with "PURCHASED ITEMS:" followed by a list of all items purchased. Multiple items will have a number in parenthesis corresponding to how many have been purchased. This function ignores all other text in the field.
+
+The default is to record purchases.
 
 ---
 ### --setup
@@ -106,21 +120,8 @@ If you wish to add a starting amount to the selected characters, you can optiona
 `!ps --setup 50:20:0:10:0`
 
 ---
-### --stock
-**GM Only** When a merchant's inventory is displayed, you can choose to either show the amount of each item in stock, or keep this information hidden. There is a default that applies to all Merchants that can be changed with the `--stock` command. Send "true" with this command if you wish to display the number of items in inventory, or "false" to prevent the inventory count from showing. The default value is "true." A link to toggle this setting is included in the `--config` dialog ([above](#--config)).
-
-```
-!ps --stock true
-!ps --stock false
-```
-
-You may also set this value individually on each Merchant token. This is necessary if you wish to override the default. To do so, simply add "show-stock" or "hide-stock" to the first Bar 1 box on the token.
-
-When you wish to show stock, items with a quantity of zero will display "out of stock." If you are hiding the stock count, the out of stock items will not be not displayed at all. Any items that have an "infinite availability" such as services ([see above](#merchant-setup)) will always be shown and will never display any quantity regardless of the this setting.
-
----
 ### --party
-**GM Only** You may add characters you have [set up already](#--setup) to a Party Members list that persists between sessions. This will allow you to distribute loot ([below](#--dist)) without needing to select player tokens. To do this, select the tokens representing the characters you wish to add and use the following command:
+**GM Only** You may add characters you have already [set up](#--setup) to a Party Members list that persists between sessions. This will allow you to distribute loot ([below](#--dist)) without needing to select player tokens. To do this, select the tokens representing the characters you wish to add and use the following command:
 
 `!ps --party`
 
@@ -151,8 +152,6 @@ You may also send an optional `--whisper` command to make `--show` whisper the r
 !ps --dist 146sp, 398gp
 ```
 
-The leftover coinage that remains when it cannot be evenly divided can either be dropped (so the players can decide amongst themselves who should receive the remainder) or given to a random Party Member. See the [drop](#--drop) command above. When leftover coins are dropped, this command will provide a GM-only "Give leftovers" link to conveniently call the `--add` command for the remaining coins. Select the recipient of the leftover coins and click the link.
-
 ---
 ### --add
 **GM Only** To add coinage to a character(s) Purse, simply pass it with the `--add` parameter. The following adds 10gp to each selected character:
@@ -177,7 +176,7 @@ As with the `--subt` command ([above](#--subt)), the exchange will fail if the a
 
 ---
 ### --buy
-Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with the inventory for a NPC that has been set up as a Merchant ([see above](#merchant-setup)). Note that this *does not* add items to a player character's sheet, it only deals with the money.
+Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with updating the Merchant's Inventory ([see above](#merchant-setup)). On a successful transaction, a character who has purchased an item will have that item recorded on their sheet if the [record purchases](#--config) option is turned on.
 
 To exchange money for an item or service, you use the `--buy` command along with the IDs of tokens representing both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. Also required is the amount for which the item is being sold using `--amt|<coinage>`, and the name of the item using `--item|<item_name>`.
 

@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.5',
+    var version = '5.5.1',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -159,9 +159,8 @@ var PurseStrings = PurseStrings || (function () {
 					var char_id = token.get('represents');
 					var character = getObj('character', token.get('represents'));
                     var pursed = isPursed(char_id);
-                    var can_purse = canPurse(char_id);
 
-                    if (!pursed && (can_purse || state['PURSESTRINGS'].sheet == '5th Edition OGL')) {
+                    if (!pursed) {
                         var newChar = {char_id: char_id, char_name: character.get('name')};
                         var charAttrs = findObjs({type: 'attribute', characterid: char_id}, {caseInsensitive: true});
 
@@ -220,8 +219,7 @@ var PurseStrings = PurseStrings || (function () {
 
                         adminDialog('Setup Complete', message);
 					} else {
-                        if (pursed) adminDialog('Setup Warning', character.get('name') + ' has already been set up for PurseStrings!');
-                        if (!can_purse) adminDialog('Setup Warning', character.get('name') + ' does not have the default SRD currency (CP, SP, EP, GP, and PP) on their character sheet!');
+                        adminDialog('Setup Warning', character.get('name') + ' has already been set up for PurseStrings!');
                     }
 				}
 			}
@@ -670,7 +668,7 @@ var PurseStrings = PurseStrings || (function () {
                                 _.each(thisCat, function (item) {
                                     if (showStock === true) {
                                         if (item.quantity !== 0 && item.quantity !== '0') {
-                                            let quant = (item.quantity == -1 || item.quantity == '') ? '' : ' <span style=\'' + styles.right + '\'>(' + item.quantity + ' available)</span>'
+                                            let quant = (item.quantity == -1 || item.quantity == '') ? '' : ' <span style=\'' + styles.right + '\'>(' + item.quantity + ' avail.)</span>'
                                             invList += '<li><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace; --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' + item.name + '</b></a> - ' +  item.price + quant + '</li>';
                                         } else {
                                             invList += '<li><b style=\'' + styles.unavail + '\'>' +  item.name + '</b> <span style=\'' + styles.right + '\'><i>out of stock</i></span></li>';
@@ -1194,8 +1192,8 @@ var PurseStrings = PurseStrings || (function () {
 
     processGMNotes = function (notes) {
         var retval, text = unescape(notes).trim();
-        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/\n(<p>)?/gi, '</p><p>').replace(/<\/?(span|div|pre|code|b|i)[^>]*>/gi, '');
-        if (text != '') retval = text.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
+        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/\n(<p>)?/gi, '</p><p>').replace(/<\/?(span|div|pre|img|code|b|i)[^>]*>/gi, '');
+        if (text != '' && /<p>.*?<\/p>/g.test(text)) retval = text.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
         return retval;
     },
 
@@ -1230,24 +1228,6 @@ var PurseStrings = PurseStrings || (function () {
     generateRowID = function () {
         "use strict";
         return generateUUID().replace(/_/g, "Z");
-    },
-
-    canPurse = function (char_id) {
-        // Check for presence of default SRD currency attributes on 5e Shaped Sheet
-        var result = true,
-        charAttrs = findObjs({type: 'attribute', characterid: char_id}, {caseInsensitive: true});
-        var currencyAttrs = _.filter(charAttrs, function (attr) {
-            return (attr.get('name').match(/^repeating_currency_.+_acronym$/) !== null);
-        });
-        if (_.size(currencyAttrs) !== 5) {
-            result = false;
-        } else {
-            _.each(currencyAttrs, function (attr) {
-                var acronym = attr.get('current');
-                if (acronym.match(/^(CP|SP|EP|GP|PP)$/i) === null) result = false;
-            });
-        }
-        return result;
     },
 
     unPurse = function (char_id) {

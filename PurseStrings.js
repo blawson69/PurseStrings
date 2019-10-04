@@ -457,7 +457,7 @@ var PurseStrings = PurseStrings || (function () {
         // !ps --give  --giver|<giver_id> --taker|<taker_id> --amt|50gp
         var rb = /\-\-(buyer|giver)\|/gi, rs = /\-\-(seller|taker)\|/gi, ri = /\-\-item\|/gi, ra = /\-\-amt\|/gi,
         buyer_token_id, seller_token_id, buyer_token_name = '', seller_token_name = '', amount = '';
-        var seller, buyer, merchant_name = '', item = '', rx = /\-\-give/gi, commands = msg.content.split('--');
+        var seller, buyer, merchant_name = '', item = '', rx = /\-\-give/gi, commands = msg.content.split(/\s*\-\-/i);
         var giving = (rx.test(msg.content)) ? true : false;
 
         if (rb.test(msg.content)) buyer_token_id = _.find(commands, function (tmpStr) { return (tmpStr.startsWith('buyer|') || tmpStr.startsWith('giver|')); }).split('|')[1].trim();

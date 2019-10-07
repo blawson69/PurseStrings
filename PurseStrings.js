@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.5.2',
+    var version = '5.5.3',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -26,7 +26,9 @@ var PurseStrings = PurseStrings || (function () {
         buttonWrapper: 'text-align: center; margin: 14px 0 10px 0; clear: both;',
         textButton: 'background-color: transparent; border: none; padding: 0; color: #8e342a; text-decoration: underline;',
         bigger: 'font-size: 1.125em; font-weight: bold; margin-right: 3px;',
-        unavail: 'color: #636363; font-style: italic;', right: 'float: right;',
+        unavail: 'color: #636363; font-style: italic;', right: 'float: right; height: 1.125em;',
+        fixedShow: 'max-width: 130px; height: 1.125em; vertical-align: text-bottom; padding: 0; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+        fixedHide: 'max-width: 180px; height: 1.125em; padding: 0; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
         alert: 'color: #C91010; font-size: 1.25em; font-weight: bold; text-align: center;',
         code: 'font-family: "Courier New", Courier, monospace; font-size: 1.25em; padding-bottom: 6px;'
     },
@@ -669,13 +671,13 @@ var PurseStrings = PurseStrings || (function () {
                                     if (showStock === true) {
                                         if (item.quantity !== 0 && item.quantity !== '0') {
                                             let quant = (item.quantity == -1 || item.quantity == '') ? '' : ' <span style=\'' + styles.right + '\'>(' + item.quantity + ' avail.)</span>'
-                                            invList += '<li><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace; --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' + item.name + '</b></a> - ' +  item.price + quant + '</li>';
+                                            invList += '<li><span style=\'' + styles.fixedShow + '\'><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace; --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '" title="Buy ' + item.name + '"><b>' + item.name + '</b></a></span> - ' +  item.price + quant + '</li>';
                                         } else {
-                                            invList += '<li><b style=\'' + styles.unavail + '\'>' +  item.name + '</b> <span style=\'' + styles.right + '\'><i>out of stock</i></span></li>';
+                                            invList += '<li><span style=\'' + styles.fixedShow + 'cursor: not-allowed;\'><b style=\'' + styles.unavail + '\' title="' + item.name + '">' +  item.name + '</b></span> <span style=\'' + styles.right + '\'><i>out of stock</i></span></li>';
                                         }
                                     } else {
                                         if (item.quantity !== 0 && item.quantity !== '0') {
-                                            invList += '<li><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace;  --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '"><b>' +  item.name + '</b></a> - ' + item.price + '</li>';
+                                            invList += '<li><span style=\'' + styles.fixedHide + '\'><a style=\'' + styles.textButton + '\' href="!ps --buy --buyer|&#64;&lbrace;selected|token_id&rbrace;  --seller|' + token_id + ' --amt|' + item.price + ' --item|' +  item.name + '" title="Buy ' + item.name + '"><b>' +  item.name + '</b></a></span> - ' + item.price + '</li>';
                                         }
                                     }
                                 });
@@ -1192,7 +1194,7 @@ var PurseStrings = PurseStrings || (function () {
 
     processGMNotes = function (notes) {
         var retval, text = unescape(notes).trim();
-        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/\n(<p>)?/gi, '</p><p>').replace(/<\/?(span|div|pre|img|code|b|i)[^>]*>/gi, '');
+        text = text.replace(/<p[^>]*>/gi, '<p>').replace(/\n(<p>)?/gi, '</p><p>').replace(/<br>/gi, '</p><p>').replace(/<\/?(span|div|pre|img|code|b|i)[^>]*>/gi, '');
         if (text != '' && /<p>.*?<\/p>/g.test(text)) retval = text.match(/<p>.*?<\/p>/g).map( l => l.replace(/^<p>(.*?)<\/p>$/,'$1'));
         return retval;
     },

@@ -15,7 +15,7 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.5.3',
+    var version = '5.6',
     debugMode = false,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
@@ -77,7 +77,7 @@ var PurseStrings = PurseStrings || (function () {
 						break;
 					case '--dist':
 						if (playerIsGM(msg.playerid)) {
-							commandDist(msg);
+							commandDist(msg.content, false);
 						}
 						break;
 					case '--subt':
@@ -527,16 +527,12 @@ var PurseStrings = PurseStrings || (function () {
 		}
 	},
 
-    commandDist = function (msg) {
+    commandDist = function (msg, external = true) {
 		// Distribute loot between selected characters
-		var loot = parseCoins(msg.content), comments = '', recipients = [],
+		var loot = parseCoins(msg), comments = '', recipients = [],
         numParty, partyMembers = state['PURSESTRINGS'].partyMembers;
         numParty = partyMembers.length;
-
-        if(msg.selected && msg.selected.length > 0) {
-            // This is where we'll include selected tokens with the Party... maybe
-            //sendChat('PurseStrings', '/w GM You also had ' + msg.selected.length + ' tokens selected.', null, {noarchive:true});
-        }
+        var retval = true;
 
 		if (loot && numParty > 0) {
             var take = splitTake(loot, numParty);
@@ -547,21 +543,30 @@ var PurseStrings = PurseStrings || (function () {
                     if (changed) {
                         recipients.push(member.get('name'));
                     } else {
-                        adminDialog('Distribution Error', 'Could not give loot to ' + member.get('name') + '.');
+                        retval = false;
+            			if (!external) adminDialog('Distribution Error', 'Could not give loot to ' + member.get('name') + '.');
+                        else log('PurseStrings Error: Could not give loot to ' + member.get('name') + '.');
                     }
                 } else {
-                    adminDialog('Distribution Error', '"' + id + '" is an invalid ID.');
+                    retval = false;
+        			if (!external) adminDialog('Distribution Error', '"' + id + '" is an invalid ID.');
+                    else log('PurseStrings Error: "' + id + '" is an invalid ID.');
                 }
             });
 
-			showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following Party Members:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each Member has received ' + prettyCoins(take, true) + '.', '', false);
+			if (!external) showDialog('Loot Distributed', '', prettyCoins(loot, true) + ' have been successfully distributed between the following Party Members:<br><ul><li>' + recipients.join('</li><li>') + '</li></ul>Each Member has received ' + prettyCoins(take, true) + '.', '', false);
 		} else {
             if (numParty == 0) {
-                adminDialog('Distribution Error', 'There are no Party Members to whom you can distribute loot!');
+                retval = false;
+    			if (!external) adminDialog('Distribution Error', 'There are no Party Members to whom you can distribute loot!');
+                else log('PurseStrings Error: There are no Party Members to whom you can distribute loot!');
             } else {
-                adminDialog('Distribution Error', 'No coinage was indicated or coinage syntax was incorrect!');
+                retval = false;
+    			if (!external) adminDialog('Distribution Error', 'No coinage was indicated or coinage syntax was incorrect!');
+                else log('PurseStrings Error: No coinage was indicated or coinage syntax was incorrect!');
             }
 		}
+        return retval;
     },
 
     splitTake = function (loot, count) {
@@ -1267,6 +1272,7 @@ var PurseStrings = PurseStrings || (function () {
 		checkInstall: checkInstall,
 		registerEventHandlers: registerEventHandlers,
         changePurse: changePurse,
+        distributeCoins: commandDist,
         version: version
 	};
 }());

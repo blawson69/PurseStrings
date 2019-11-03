@@ -15,8 +15,8 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '5.6',
-    debugMode = false,
+    var version = '5.7',
+    debugMode = true,
     styles = {
         box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
         title: 'padding: 0 0 10px 0; color: ##591209; font-size: 1.5em; font-weight: bold; font-variant: small-caps; font-family: "Times New Roman",Times,serif;',
@@ -39,6 +39,7 @@ var PurseStrings = PurseStrings || (function () {
         if (typeof state['PURSESTRINGS'].partyMembers == 'undefined') state['PURSESTRINGS'].partyMembers = [];
         if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
         if (typeof state['PURSESTRINGS'].recPurchases == 'undefined') state['PURSESTRINGS'].recPurchases = true;
+        if (typeof state['PURSESTRINGS'].useExtScripts == 'undefined') state['PURSESTRINGS'].useExtScripts = true;
 
         if (typeof state['PURSESTRINGS'].sheet == 'undefined') {
             var message, sheet = detectSheet();
@@ -339,6 +340,7 @@ var PurseStrings = PurseStrings || (function () {
             var parts = x.split(/\s*\|\s*/i);
             if (parts[0] == 'stock') state['PURSESTRINGS'].showStock = !state['PURSESTRINGS'].showStock;
             if (parts[0] == 'np') state['PURSESTRINGS'].recPurchases = !state['PURSESTRINGS'].recPurchases;
+            if (parts[0] == 'ext') state['PURSESTRINGS'].useExtScripts = !state['PURSESTRINGS'].useExtScripts;
         });
 
         if (typeof state['PURSESTRINGS'].sheet == 'undefined' || state['PURSESTRINGS'].sheet == 'Unknown') {
@@ -361,6 +363,9 @@ var PurseStrings = PurseStrings || (function () {
             message += '<br><br><span style=\'' + styles.bigger + '\'>Recording Purchases:</span> Item purchases from a Merchant ';
             if (state['PURSESTRINGS'].recPurchases) {
                 message += 'will automatically be recorded to the character sheet\'s ' + (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a>';
+                if (typeof PotionManager !== 'undefined' || typeof GearManager !== 'undefined') {
+                    message += '<br><br><span style=\'' + styles.bigger + '\'>External Script Integration:</span> Purchases that correspond to items in the PotionManager and/or GearManager databases ' + (state['PURSESTRINGS'].useExtScripts ? 'will' : 'will <i>not</i>') + ' be added to the appropriate section instead of being recorded to the ' + (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --ext|toggle">Change</a>';
+                }
             } else {
                 message += 'will not be recorded automatically on the character sheet. Players will need to record purchases manually. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a>';
             }
@@ -500,7 +505,7 @@ var PurseStrings = PurseStrings || (function () {
                             updateInventory(buyer_token_id, item, amount, 'add');
                             adminDialog('Purchase Successful', buyer_token_name + ' paid ' + seller.get('name') + ' ' + amount + ' for one ' + desc + '.');
                         } else {
-                            if (!isService(seller_token_id, desc) && state['PURSESTRINGS'].recPurchases) recordPurchase(buyer.get('id'), desc);
+                            if (!isService(seller_token_id, desc) && state['PURSESTRINGS'].recPurchases) recordPurchase(buyer_token_id, desc);
                             showDialog('Purchase Successful', buyer.get('name'), 'You paid ' + seller_token_name + ' ' + amount + ' for one ' + desc + '.', buyer.get('name'), true);
                         }
 
@@ -590,25 +595,37 @@ var PurseStrings = PurseStrings || (function () {
         return take;
     },
 
-    recordPurchase = function (char_id, new_item) {
-        var purchased, items = '', tmpItems;
-        var field = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure') })[0];
-        if (!field) field = createObj("attribute", {characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure'), current: ''});
+    recordPurchase = function (token_id, new_item) {
+        var potions = (typeof PotionManager !== 'undefined' && typeof PotionManager.getPotions !== 'undefined') ? _.pluck(PotionManager.getPotions(), 'name') : [];
+        var gear = (typeof GearManager !== 'undefined' && typeof GearManager.getGear !== 'undefined') ? _.pluck(GearManager.getGear(), 'name') : [];
 
-        var notes = field.get('current');
-        purchased = _.find(notes.split(/\n/), function (x) { return x.startsWith('PURCHASED ITEMS:'); });
-        if (purchased) items = purchased.replace('PURCHASED ITEMS:', '').trim();
-        items = items.split(/\s*,\s*/);
-        tmpItems = denumerateItems(items);
-        //tmpItems.push(new_item);
-        items = enumerateItems(tmpItems.push(new_item));
-        items = _.filter(enumerateItems(tmpItems), function (x) { return x != ''; });
-        if (notes.search(/^PURCHASED ITEMS\:\s.*$/m) == -1) {
-            notes = (notes == '') ? 'PURCHASED ITEMS: ' + items.join(', ') : notes + '\n\nPURCHASED ITEMS: ' + items.join(', ');
+        if (_.find(potions, function (x) { return x == new_item; }) && state['PURSESTRINGS'].useExtScripts) {
+            PotionManager.addPotion({selected: [{_type: 'graphic', _id: token_id}], content: new_item});
+        } else if (_.find(gear, function (x) { return x == new_item; }) && state['PURSESTRINGS'].useExtScripts) {
+            GearManager.addGear({selected: [{_type: 'graphic', _id: token_id}], content: new_item});
         } else {
-            notes = notes.replace(/^PURCHASED ITEMS\:\s(.*)$/m, 'PURCHASED ITEMS: ' + items.join(', '));
+            var token = getObj('graphic', token_id);
+            var char = getObj('character', token.get('represents')), purchased, items = '', tmpItems;
+            if (char) {
+                var field = findObjs({ type: 'attribute', characterid: char.get('id'), name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure') })[0];
+                if (!field) field = createObj("attribute", {characterid: char.get('id'), name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure'), current: ''});
+                var notes = field.get('current');
+                purchased = _.find(notes.split(/\n/), function (x) { return x.startsWith('PURCHASED ITEMS:'); });
+                if (purchased) items = purchased.replace('PURCHASED ITEMS:', '').trim();
+                items = items.split(/\s*,\s*/);
+                tmpItems = denumerateItems(items);
+                items = enumerateItems(tmpItems.push(new_item));
+                items = _.filter(enumerateItems(tmpItems), function (x) { return x != ''; });
+                if (notes.search(/^PURCHASED ITEMS\:\s.*$/m) == -1) {
+                    notes = (notes == '') ? 'PURCHASED ITEMS: ' + items.join(', ') : notes + '\n\nPURCHASED ITEMS: ' + items.join(', ');
+                } else {
+                    notes = notes.replace(/^PURCHASED ITEMS\:\s(.*)$/m, 'PURCHASED ITEMS: ' + items.join(', '));
+                }
+                field.set({ current: notes });
+            } else {
+                adminDialog('Record Purchase Error', 'Invalid token ID.');
+            }
         }
-        field.set({ current: notes });
     },
 
     denumerateItems = function (items) {

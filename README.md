@@ -3,6 +3,9 @@ This [Roll20](http://roll20.net/) script handles currency and currency exchanges
 
 This script is for use with the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped) and the D&D 5th Edition OGL Sheet.
 
+## Script Integration
+For users of the 5e Shaped Sheet, PurseStrings will detect the presence of the [PotionManager (v0.4+)](https://github.com/blawson69/PotionManager) and/or [GearManager (v0.6+)](https://github.com/blawson69/GearManager) scripts, and can add purchased items directly into a characters offense or utility sections according to those scripts. The option to enable/disable this behavior is in the [config](#--config) dialog. The default is enabled.
+
 ## Coinage
 PurseStrings is fairly flexible in the way it accepts coinage through the various commands. It can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest (cp, sp, ep, gp, pp) with zeros for placeholders.
 

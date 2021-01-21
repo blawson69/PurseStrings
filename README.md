@@ -1,10 +1,9 @@
 # PurseStrings
+> **Changes in version 6.0:** Removed PotionManager and GearManager integration, replacing those scripts with  [ItemDB](https://github.com/blawson69/ItemDB) for adding purchased items to character sheets.
+
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
 This script is for use with the [5e Shaped Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped) and the D&D 5th Edition OGL Sheet.
-
-## Script Integration
-For users of the 5e Shaped Sheet, PurseStrings will detect the presence of the [PotionManager (v0.4+)](https://github.com/blawson69/PotionManager) and/or [GearManager (v0.6+)](https://github.com/blawson69/GearManager) scripts, and can add purchased items directly into a characters offense or utility sections according to those scripts. The option to enable/disable this behavior is in the [config](#--config) dialog. The default is enabled.
 
 ## Coinage
 PurseStrings is fairly flexible in the way it accepts coinage through the various commands. It can be sent as either a list of amounts & denominations (commas and spaces between numbers and denominations are accepted), or as a shorthand list with a colon separating the amounts in denominational order from smallest to largest (cp, sp, ep, gp, pp) with zeros for placeholders.
@@ -23,7 +22,7 @@ Merchants are NPCs that have items or services to sell. A Merchant has two requi
 1. It must be a **token** that contains the Merchant's Inventory (below) in the token's GM Notes, and
 2. The token must represent a Character that has been [set up](#--setup) with PurseStrings.
 
-As it is not required for the Merchant token to be the default token of the character, you have more flexibility and fewer character sheets to load. You can create a generic Character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions. If you wish to use a character as a Merchant, [see below](#characters-as-merchants).
+As it is not required for the Merchant token to be the default token of the character, you have more flexibility and fewer character sheets to load. You can create a generic Merchant character and use it with multiple tokens - they will all have different Inventory but use the same pool of money for transactions. If you wish to use a character as a Merchant, [see below](#characters-as-merchants).
 
 You can allow a Merchant's Inventory to override the [default setting](#--config) by adding "show-stock" or "hide-stock" to the first Bar 1 box on the token. This allows you to mix up inventory "types" such as a restaurant menu and a shopkeeper's stock.
 
@@ -79,9 +78,9 @@ If you wish to use a character as a Merchant (as in previous versions of PurseSt
 - **[--dist](#--dist)** <_coinage_>
 - **[--add](#--add)** <_coinage_>
 - **[--subt](#--subt)** <_coinage_>
-- **[--give](#--give)** <_giver_id_> <_taker_id_> <_coinage_>
-- **[--buy](#--buy)** <_buyer_id_> <_seller_id_> <_coinage_> <_item_>
-- **[--invlist](#--invlist)** <_merchant_id_>
+- **[--give](#--give)** <_giver_token_id_> <_taker_token_id_> <_coinage_>
+- **[--buy](#--buy)** <_buyer_token_id_> <_seller_token_id_> <_coinage_> <_item_>
+- **[--invlist](#--invlist)** <_merchant_token_id_>
 - **[--update-merchant](#--update-merchant)**
 
 ---
@@ -109,6 +108,11 @@ When a player character purchases an item from a Merchant, PurseStrings can reco
 The script will add a line beginning with "PURCHASED ITEMS:" followed by a list of all items purchased. Multiple items will have a number in parentheses corresponding to how many have been purchased. This function ignores all other text in the field.
 
 The default is to record purchases.
+
+#### Script Integration
+For users of the 5e Shaped Sheet, PurseStrings will detect the presence of the [ItemDB](https://github.com/blawson69/ItemDB) script and can optionally add purchased items to the buyer's character sheet according to that script's configuration. You can enable/disable this behavior is in the [config](#--config) dialog if you have Recording Purchases turned on.
+
+The default is enabled.
 
 ---
 ### --setup
@@ -171,7 +175,7 @@ Equivalences are used when determining what coins are removed. For instance, if 
 ### --give
 Characters can exchange money between themselves. You must send a token ID that represents both the giving character and the taking (receiving) character along with the amount being given. If you have a character that acts as a "bank" for the Party and does not have a token on the VTT, you can pass the character ID as a *taker only*.
 
-`!ps --give --giver|<giver_id> --taker|<taker_id> --amt|50gp`
+`!ps --give --giver|<giver_token_id> --taker|<taker_token_id> --amt|50gp`
 
 As with the `--subt` command ([above](#--subt)), the exchange will fail if the amount of the coinage is more than what the giver has in their Purse, and equivalences will be used for making change.
 
@@ -181,11 +185,11 @@ Characters can also pay for goods & services as well. PurseStrings handles the m
 
 To exchange money for an item or service, you use the `--buy` command along with the IDs of tokens representing both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. Also required is the amount for which the item is being sold using `--amt|<coinage>`, and the name of the item using `--item|<item_name>`.
 
-`!ps --buy --buyer|<buyer_id> --seller|<seller_id> --amt|50gp --item|Potion of Healing`
+`!ps --buy --buyer|<buyer_token_id> --seller|<seller_token_id> --amt|50gp --item|Potion of Healing`
 
 You can send a category for the item by separating the name and category with a tilde symbol (~). This will allow you to categorize items that are not already in a Merchant's Inventory. If no category is sent, an "Uncategorized" category will be used.
 
-`!ps --buy --buyer|<buyer_id> --seller|<seller_id> --amt|37gp --item|Greatsword~Weapons`
+`!ps --buy --buyer|<buyer_token_id> --seller|<seller_token_id> --amt|37gp --item|Greatsword~Weapons`
 
 As with the `--subt` command ([above](#--subt)), the transaction will fail if the price is more than what the buyer has in their Purse, and equivalences will be used for making change.
 
@@ -195,7 +199,7 @@ The Inventory dialog for Merchants ([below](#--invlist)) outputs the proper code
 ### --invlist
 **GM Only** You can display a Merchant's Inventory (see [setup instructions](#merchant-setup) above) using the `--invlist` command followed by the Merchant token's ID:
 
-`!ps --invlist <merchant_id>`
+`!ps --invlist <merchant_token_id>`
 
 This generates a dialog with the Merchant's inventory/menu and provides the item name, price, and a link the player's can use to make the purchase.
 

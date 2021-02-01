@@ -1,5 +1,7 @@
 # PurseStrings
-> **Changes in version 6.0:** Removed PotionManager and GearManager integration, replacing those scripts with  [ItemDB](https://github.com/blawson69/ItemDB) for adding purchased items to character sheets.
+> **Changes in version 6.0:**
+  1. Removed PotionManager and GearManager integration, replacing those scripts with  [ItemDB](https://github.com/blawson69/ItemDB) for adding purchased items to character sheets.
+  2. Added [conversion function](#--convert) to enable consolidation of coins into higher denominations.
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 

@@ -32,25 +32,16 @@ var PurseStrings = PurseStrings || (function () {
         alert: 'color: #C91010; font-size: 1.25em; font-weight: bold; text-align: center;',
         code: 'font-family: "Courier New", Courier, monospace; font-size: 1.25em; padding-bottom: 6px;'
     },
+    DENOMINATIONS = ['cp','sp','ep','gp','pp'],
 
     checkInstall = function () {
         if (!_.has(state, 'PURSESTRINGS')) state['PURSESTRINGS'] = state['PURSESTRINGS'] || {};
-        if (typeof state['PURSESTRINGS'].pursed == 'undefined') state['PURSESTRINGS'].pursed = [];
         if (typeof state['PURSESTRINGS'].partyMembers == 'undefined') state['PURSESTRINGS'].partyMembers = [];
         if (typeof state['PURSESTRINGS'].showStock == 'undefined') state['PURSESTRINGS'].showStock = true;
         if (typeof state['PURSESTRINGS'].recPurchases == 'undefined') state['PURSESTRINGS'].recPurchases = true;
         if (typeof state['PURSESTRINGS'].useExtScripts == 'undefined') state['PURSESTRINGS'].useExtScripts = true;
+        if (typeof state['PURSESTRINGS'].sheet == 'undefined') state['PURSESTRINGS'].sheet = detectSheet();
 
-        if (typeof state['PURSESTRINGS'].sheet == 'undefined') {
-            var message, sheet = detectSheet();
-            if (sheet == 'Unknown') {
-                message = 'PurseStrings was unable to detect the character sheet for your game! You must be using either the 5e Shaped Sheet or the 5th Edition OGL Sheet. Please indicate which sheet you are using.';
-                message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --sheet ?{Choose Sheet|5e Shaped|5th Edition OGL}">SET SHEET</a></div>';
-                adminDialog('Configuration Notice', message);
-            } else {
-                state['PURSESTRINGS'].sheet = sheet;
-            }
-        }
         log('--> PurseStrings v' + version + ' <-- Initialized');
 
         if (debugMode) {
@@ -67,69 +58,37 @@ var PurseStrings = PurseStrings || (function () {
 			if (parms[1]) {
 				switch (parms[1]) {
 					case '--setup':
-						if (playerIsGM(msg.playerid)) {
-							commandSetup(msg);
-						}
+						if (playerIsGM(msg.playerid)) commandSetup(msg);
 						break;
 					case '--add':
-						if (playerIsGM(msg.playerid)) {
-							commandAdd(msg);
-						}
+						if (playerIsGM(msg.playerid)) commandAdd(msg);
 						break;
 					case '--dist':
-						if (playerIsGM(msg.playerid)) {
-							commandDist(msg.content, false);
-						}
+						if (playerIsGM(msg.playerid)) commandDist(msg.content, false);
 						break;
 					case '--subt':
-						if (playerIsGM(msg.playerid)) {
-							commandSubt(msg);
-						}
+						if (playerIsGM(msg.playerid)) commandSubt(msg);
 						break;
                     case '--drop':
-  						if (playerIsGM(msg.playerid)) {
-  							commandDrop(msg.content);
-  						}
+  						if (playerIsGM(msg.playerid)) commandDrop(msg.content);
   						break;
                     case '--stock':
-  						if (playerIsGM(msg.playerid)) {
-  							commandShowStock(msg.content);
-  						}
+  						if (playerIsGM(msg.playerid)) commandShowStock(msg.content);
   						break;
                     case '--party':
-  						if (playerIsGM(msg.playerid)) {
-  							commandParty(msg);
-  						}
+  						if (playerIsGM(msg.playerid)) commandParty(msg);
   						break;
                     case '--config':
-  						if (playerIsGM(msg.playerid)) {
-  							commandConfig(msg.content);
-  						}
-  						break;
-                    case '--pursed':
-  						if (playerIsGM(msg.playerid)) {
-  							commandPursed();
-  						}
-  						break;
-                    case '--remove':
-  						if (playerIsGM(msg.playerid)) {
-  							unPurse(parms[2]);
-  						}
+  						if (playerIsGM(msg.playerid)) commandConfig(msg.content);
   						break;
                     case '--invlist':
-  						if (playerIsGM(msg.playerid)) {
-  							commandInventory(msg.content);
-  						}
+  						if (playerIsGM(msg.playerid)) commandInventory(msg.content);
   						break;
                     case '--sheet':
-  						if (playerIsGM(msg.playerid)) {
-  							commandSheet(msg.content);
-  						}
+  						if (playerIsGM(msg.playerid)) commandSheet();
   						break;
                     case '--update-merchant':
-  						if (playerIsGM(msg.playerid)) {
-  							commandUpdateMerch(msg.selected);
-  						}
+  						if (playerIsGM(msg.playerid)) commandUpdateMerch(msg.selected);
   						break;
                     case '--give':
 					case '--buy':
@@ -137,6 +96,9 @@ var PurseStrings = PurseStrings || (function () {
 						break;
 					case '--show':
 						commandShow(msg);
+						break;
+					case '--convert':
+						commandConvert(msg);
 						break;
                     case '--help':
                     default:
@@ -161,69 +123,31 @@ var PurseStrings = PurseStrings || (function () {
 				if (token.get('represents') !== '') {
 					var char_id = token.get('represents');
 					var character = getObj('character', token.get('represents'));
-                    var pursed = isPursed(char_id);
 
-                    if (!pursed) {
-                        var newChar = {char_id: char_id, char_name: character.get('name')};
-                        var charAttrs = findObjs({type: 'attribute', characterid: char_id}, {caseInsensitive: true});
-
-                        if (state['PURSESTRINGS'].sheet == '5e Shaped') {
-                            var currencyAttrs = _.filter(charAttrs, function (attr) {
-                                return (attr.get('name').match(/^repeating_currency_.+_acronym$/) !== null);
-                            });
-                            _.each(currencyAttrs, function (attr) {
-                                var acronym = attr.get('current'), aID = attr.get('name').split('_')[2];
-                                if (acronym == 'CP') newChar.cp_id = aID;
-                                if (acronym == 'SP') newChar.sp_id = aID;
-                                if (acronym == 'EP') newChar.ep_id = aID;
-                                if (acronym == 'GP') newChar.gp_id = aID;
-                                if (acronym == 'PP') newChar.pp_id = aID;
-                            });
-
-                            var cp = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + newChar.cp_id + '_quantity' })[0];
-                            if (!cp) cp = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + newChar.cp_id + '_quantity', current: 0});
-                            var sp = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + newChar.sp_id + '_quantity' })[0];
-                            if (!sp) sp = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + newChar.sp_id + '_quantity', current: 0});
-                            var ep = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + newChar.ep_id + '_quantity' })[0];
-                            if (!ep) ep = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + newChar.ep_id + '_quantity', current: 0});
-                            var gp = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + newChar.gp_id + '_quantity' })[0];
-                            if (!gp) gp = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + newChar.gp_id + '_quantity', current: 0});
-                            var pp = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + newChar.pp_id + '_quantity' })[0];
-                            if (!pp) pp = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + newChar.pp_id + '_quantity', current: 0});
-                        } else {
-                            newChar.cp_id = 'cp';
-                            newChar.sp_id = 'sp';
-                            newChar.ep_id = 'ep';
-                            newChar.gp_id = 'gp';
-                            newChar.pp_id = 'pp';
-
-                            var cp = findObjs({ type: 'attribute', characterid: char_id, name: 'cp' })[0];
-                            if (!cp) cp = createObj("attribute", {characterid: char_id, name: 'cp', current: 0});
-                            var sp = findObjs({ type: 'attribute', characterid: char_id, name: 'sp' })[0];
-                            if (!sp) sp = createObj("attribute", {characterid: char_id, name: 'sp', current: 0});
-                            var ep = findObjs({ type: 'attribute', characterid: char_id, name: 'ep' })[0];
-                            if (!ep) ep = createObj("attribute", {characterid: char_id, name: 'ep', current: 0});
-                            var gp = findObjs({ type: 'attribute', characterid: char_id, name: 'gp' })[0];
-                            if (!gp) gp = createObj("attribute", {characterid: char_id, name: 'gp', current: 0});
-                            var pp = findObjs({ type: 'attribute', characterid: char_id, name: 'pp' })[0];
-                            if (!pp) pp = createObj("attribute", {characterid: char_id, name: 'pp', current: 0});
-                        }
-                        state['PURSESTRINGS'].pursed.push(newChar);
-                        addShowPurse(char_id);
-
-                        var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
-						var coins = parseCoins(msg.content);
-						if (coins) {
-							var initpurse = changePurse(msg.content, char_id, 'add');
-                            if (initpurse) {
-                                message += ' Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
-                            }
-						}
-
-                        adminDialog('Setup Complete', message);
-					} else {
-                        adminDialog('Setup Warning', character.get('name') + ' has already been set up for PurseStrings!');
+                    if (!isPursed(char_id)) {
+                        _.each(DENOMINATIONS, function (denom) {
+                            validateDenomination(char_id, denom);
+                        });
                     }
+
+                    var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
+                    if (addShowPurse(char_id)) {
+                        message += ' A "ShowPurse" action was added to enable viewing of their Purse by the controlling player.';
+                    }
+                    if (isMerchant()) {
+                        if (addShowInventory(token.get('id'))) {
+                            message += '<br>A "ShowInventory" action was also added to this Merchant.';
+                        }
+                    }
+                    var coins = parseCoins(msg.content);
+                    if (coins) {
+                        var initpurse = changePurse(msg.content, char_id, 'add');
+                        if (initpurse) {
+                            message += '<br>Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
+                        }
+                    }
+
+                    adminDialog('Setup Complete', message);
 				}
 			}
 		});
@@ -246,23 +170,20 @@ var PurseStrings = PurseStrings || (function () {
             message = 'The following characters have been added to the Party Members list for loot distribution:<br><ul>';
             _.each(msg.selected, function(obj) {
                 var token = getObj(obj._type, obj._id);
-                if (token) {
-                    if (token.get('represents') !== '' && isPursed(token.get('represents'))) {
-                        var char_id = token.get('represents');
-                        var character = getObj('character', char_id);
-                        if (!_.find(state['PURSESTRINGS'].partyMembers, function(id) {return id == char_id;})) {
-                            state['PURSESTRINGS'].partyMembers.push(char_id);
-                            members.push('<li>' + character.get('name') + '</li>');
-                        }
-                    } else {
-                        if (token.get('represents') !== '') {
-                            var char_id = token.get('represents');
-                            var character = getObj('character', char_id);
-                            errlist.push('<li>' + character.get('name') + ' is not set up with PurseStrings.</li>');
-                        } else {
-                            errlist.push('<li>Token ' + token.get('id') + ' does not represent a character.</li>');
+                if (token && token.get('represents') !== '') {
+                    var char_id = token.get('represents');
+                    var character = getObj('character', char_id);
+                    if (!_.find(state['PURSESTRINGS'].partyMembers, function(id) {return id == char_id;})) {
+                        state['PURSESTRINGS'].partyMembers.push(char_id);
+                        members.push('<li>' + character.get('name') + '</li>');
+                        if (!isPursed(token.get('represents'))) {
+                            errlist.push('<li>' + character.get('name') + ' needs to be set up for PurseStrings.</li>')
                         }
                     }
+                } else {
+                    var char_id = token.get('represents');
+                    var character = getObj('character', char_id);
+                    errlist.push('<li>' + character.get('name') + ' does not represent a character.</li>');
                 }
             });
 
@@ -283,54 +204,31 @@ var PurseStrings = PurseStrings || (function () {
 
     commandHelp = function (msg) {
         // Help dialog with list of commands and a link to the Config Menu for GM
-        var message;
-        if (playerIsGM(msg.playerid)) {
-            message = '<span style=\'' + styles.code + '\'>!ps --help</span><br>Sends this Help dialog to the chat window.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --setup</span><br>Set up selected character(s) for use with PurseStrings. <i>GM only</i>.<br><br>'
-            + '<span style=\'' + styles.code + '\'b>!ps --setup 15gp</span><br>Set up selected character(s) and add 15gp startup coins. <i>GM only</i>.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --show</span><br>Show selected character(s) Purse in the chat window.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --show --whisper</span><br>Whisper selected character(s) Purse in the chat window.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --dist 500cp 300sp 100gp</span><br>Distributes 500cp, 300sp, and 100gp evenly between Party Members. <i>GM only</i>.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --add 15gp</span><br>Add 15gp to the selected character(s) Purse. <i>GM only</i>.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --subt 15gp</span><br>Remove 15gp from the selected character(s) Purse. <i>GM only</i>.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --give --giver|&#60;giver_id&#62; --taker|&#60;taker_id&#62; --amt|15gp</span><br>Giver gives 15gp to Taker.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --buy --buyer|&#60;buyer_id&#62; --seller|&#60;merchant_id&#62; --amt|15gp --item|Dagger</span><br>PC buys a Dagger for 15gp.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --buy --buyer|&#60;merchant_id&#62; --seller|&#60;seller_id&#62; --amt|7gp --item|Dagger~Weapons</span><br>PC sells a Dagger to Merchant for 7gp.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --invlist &#60;merchant_id&#62;</span><br>Show Merchant inventory list in chat window. <i>GM only</i>.<br><br>'
-            + 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.'
-            + '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">CONFIG MENU</a></div>';
-            adminDialog('PurseStrings Help', message);
-        } else {
-            message = '<span style=\'' + styles.code + '\'>!ps --help</span><br>Sends this Help dialog to the chat window.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --show</span><br>Shows your Purse in the chat window. Requires selected character\'s token.<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --show --whisper</span><br>Whispers your Purse to yourself in the chat window. Requires selected character\'s token(s).<br><br>'
-            + '<span style=\'' + styles.code + '\'>!ps --give --giver|&#60;giver_id&#62; --taker|&#60;taker_id&#62; --amt|15gp</span><br>Giver gives 15gp to Taker.';
-            showDialog('PurseStrings Help', '', message, msg.who, true);
+        var message = '', isGM = playerIsGM(msg.playerid);
+        if (isGM) {
+            message += '<span style=\'' + styles.code + '\'>!ps --config</span><br>Sends the Config dialog to the chat window.<br><br>';
+            message += '<span style=\'' + styles.code + '\'>!ps --setup</span><br>Set up selected character(s) for use with PurseStrings. <i>GM only</i>.<br><br>';
+            message += '<span style=\'' + styles.code + '\'b>!ps --setup 15gp</span><br>Set up selected character(s) and add 15gp startup coins. <i>GM only</i>.<br><br>';
         }
-    },
-
-    commandSheet = function (msg) {
-        // Set the sheet type
-        var args = msg.split('--sheet');
-        var sheet = (args[1]) ? args[1].trim() : '';
-
-        if (sheet == '5e Shaped' || sheet == '5th Edition OGL') {
-            state['PURSESTRINGS'].sheet = sheet;
-        } else {
-            state['PURSESTRINGS'].sheet = 'Unknown';
+        message += '<span style=\'' + styles.code + '\'>!ps --show</span><br>Show selected character(s) Purse in the chat window.<br><br>';
+        message += '<span style=\'' + styles.code + '\'>!ps --show --whisper</span><br>Whisper selected character(s) Purse in the chat window.<br><br>';
+        if (isGM) {
+            message += '<span style=\'' + styles.code + '\'>!ps --dist 500cp 300sp 100gp</span><br>Distributes 500cp, 300sp, and 100gp evenly between Party Members. <i>GM only</i>.<br><br>';
+            message += '<span style=\'' + styles.code + '\'>!ps --add 15gp</span><br>Add 15gp to the selected character(s) Purse. <i>GM only</i>.<br><br>';
+            message += '<span style=\'' + styles.code + '\'>!ps --subt 15gp</span><br>Remove 15gp from the selected character(s) Purse. <i>GM only</i>.<br><br>';
+            message += '<span style=\'' + styles.code + '\'>!ps --covert gp</span><br>Converts selected character(s) Purse into GP. <i>GM only</i>.<br><br>';
+        }
+        message += '<span style=\'' + styles.code + '\'>!ps --give --giver|&#60;giver_token_id&#62; --taker|&#60;taker_token_id&#62; --amt|15gp</span><br>Giver gives 15gp to Taker.<br><br>';
+        if (isGM) {
+            message += '<span style=\'' + styles.code + '\'>!ps --buy --buyer|&#60;buyer_token_id&#62; --seller|&#60;merchant_token_id&#62; --amt|15gp --item|Dagger</span><br>PC buys a Dagger for 15gp.<br><br>';
+            message += '<span style=\'' + styles.code + '\'>!ps --buy --buyer|&#60;merchant_token_id&#62; --seller|&#60;seller_token_id&#62; --amt|7gp --item|Dagger~Weapons</span><br>PC sells a Dagger to Merchant for 7gp.<br><br>';
+            message += '<span style=\'' + styles.code + '\'>!ps --invlist &#60;merchant_token_id&#62;</span><br>Show Merchant inventory list in chat window. <i>GM only</i>.<br><br>';
+            message += 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.';
+            message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">CONFIG MENU</a></div>';
         }
 
-        commandConfig(msg);
-    },
-
-    commandPursed = function () {
-        // Displays a list of character names who have been set up with PurseStrings
-        var message = 'The following characters have been set up with PurseStrings.<br><br>You may remove one by clicking the ❌ next to their name. This will also delete them from the Party Members list but <b>will not</b> remove any currency from their character sheet.<ul>';
-        _.each(state['PURSESTRINGS'].pursed, function (char) {
-            message += '<li>' + char.char_name + '&nbsp;<a style=\'' + styles.textButton + ' text-decoration: none; font-weight: bold;\' href="!ps --remove ' + char.char_id + '">❌</a></li>';
-        });
-        message += '</ul><div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --config">&#9668; BACK</a></div>';
-        adminDialog('Character List', message);
+        if (isGM) adminDialog('PurseStrings Help', message);
+        else showDialog('PurseStrings Help', '', message, msg.who, true);
     },
 
     commandConfig = function (msg) {
@@ -343,51 +241,98 @@ var PurseStrings = PurseStrings || (function () {
             if (parts[0] == 'ext') state['PURSESTRINGS'].useExtScripts = !state['PURSESTRINGS'].useExtScripts;
         });
 
-        if (typeof state['PURSESTRINGS'].sheet == 'undefined' || state['PURSESTRINGS'].sheet == 'Unknown') {
-            message += '<p style=\'' + styles.alert + '\'>⚠️ Unknown character sheet!</p>';
-            message += '<p>PurseStrings was unable to detect the character sheet for your game. You must be using either the 5e Shaped Sheet or the 5th Edition OGL Sheet. Please tell PurseStrings what character sheet is in use before you can continue using the script.</p><br>';
-            message += 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.'
-            + '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --sheet ?{Choose Sheet|5e Shaped|5th Edition OGL}">SET SHEET</a></div>';
-            adminDialog('Error', message);
+        message += 'To setup a character with the PurseStrings token actions and to ensure they have the required denominations of coins, select their token(s) and click the button below.';
+        message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --setup ?{Startup Money|}" title="Setup selected character(s)">SETUP CHARACTER</a></div>';
+
+        message += '<div style=\'' + styles.title + '\'>Default Settings</div>';
+        message += '<span style=\'' + styles.bigger + '\'>Merchant Stock:</span> The quantity of a Merchant\'s Inventory items is set to be ';
+        if (state['PURSESTRINGS'].showStock) {
+            message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --config --stock|toggle">Change</a><br><br>';
         } else {
-            message += 'You currently have ' + _.size(state['PURSESTRINGS'].pursed) + ' characters set up for use with PurseStrings. <a style=\'' + styles.textButton + '\' href="!ps --pursed">Show list</a>.';
-
-            message += '<br><br><div style=\'' + styles.title + '\'>Default Settings</div>';
-            message += '<span style=\'' + styles.bigger + '\'>Merchant Stock:</span> The quantity of a Merchant\'s Inventory items is set to be ';
-            if (state['PURSESTRINGS'].showStock) {
-                message += 'shown to players, with "out of stock" items being labeled as such. <a style=\'' + styles.textButton + '\' href="!ps --config --stock|toggle">Change</a>';
-            } else {
-                message += 'hidden from players, with "out of stock" items not being displayed in the list. <a style=\'' + styles.textButton + '\' href="!ps --config --stock|toggle">Change</a>';
-            }
-
-            message += '<br><br><span style=\'' + styles.bigger + '\'>Recording Purchases:</span> Item purchases from a Merchant ';
-            if (state['PURSESTRINGS'].recPurchases) {
-                message += 'will automatically be recorded to the character sheet\'s ' + (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a>';
-                if (useItemDB()) {
-                    message += '<br><br><span style=\'' + styles.bigger + '\'>External Script Integration:</span> Purchased items found in the ItemDB database ' + (state['PURSESTRINGS'].useExtScripts ? 'will' : 'will <i>not</i>') + ' be added to the appropriate section instead of being recorded to the ' + (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --ext|toggle">Change</a>';
-                }
-            } else {
-                message += 'will not be recorded automatically on the character sheet. Players will need to record purchases manually. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a>';
-            }
-
-            message += '<br><br><div style=\'' + styles.title + '\'>Party Members</div>';
-            if (_.size(state['PURSESTRINGS'].partyMembers) > 0) {
-                message += 'The following characters are in the Party Members list for loot distribution:<br><ul>';
-                _.each(state['PURSESTRINGS'].partyMembers, function(char_id) {
-                    var character = getObj('character', char_id);
-                    message += '<li>' + character.get('name') + '</li>';
-                });
-                message += "</ul>";
-            } else {
-                message += 'There are no characters in the Party Members list! ';
-            }
-            message += 'To add one or more characters to the Party Members list, select their token(s) and <a style=\'' + styles.textButton + '\' href="!ps --party">click here</a>.<br><br>';
-            message += 'See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.'
-            + '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --help">HELP MENU</a></div>';
-            adminDialog('PurseStrings Config', message);
+            message += 'hidden from players, with "out of stock" items not being displayed in the list. <a style=\'' + styles.textButton + '\' href="!ps --config --stock|toggle">Change</a><br><br>';
         }
 
+        message += '<span style=\'' + styles.bigger + '\'>Recording Purchases:</span> Item purchases from a Merchant ';
+        if (state['PURSESTRINGS'].recPurchases) {
+            message += 'will automatically be recorded to the character sheet\'s ' + (isShapedSheet() ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">Change</a><br><br>';
+            if (useItemDB()) {
+                message += '<span style=\'' + styles.bigger + '\'>External Script Integration:</span> Purchased items found in the ItemDB database ' + (state['PURSESTRINGS'].useExtScripts ? 'will' : 'will <i>not</i>') + ' be added to the appropriate section instead of being recorded to the ' + (isShapedSheet() ? 'Miscellaneous Notes' : 'Treasure') + ' field. <a style=\'' + styles.textButton + '\' href="!ps --config --ext|toggle">toggle</a><br><br>';
+            }
+        } else {
+            message += 'will not be recorded automatically on the character sheet. Players will need to record purchases manually. <a style=\'' + styles.textButton + '\' href="!ps --config --np|toggle">toggle</a><br><br>';
+        }
+
+        message += '<div style=\'' + styles.title + '\'>Party Members</div>';
+        if (_.size(state['PURSESTRINGS'].partyMembers) > 0) {
+            message += 'The following characters are in the Party Members list for loot distribution:<br><ul>';
+            _.each(state['PURSESTRINGS'].partyMembers, function(char_id) {
+                var character = getObj('character', char_id);
+                message += '<li>' + character.get('name') + '</li>';
+            });
+            message += "</ul>";
+        } else {
+            message += '<b>There are no characters in the Party Members list.</b> ';
+        }
+        message += 'To add one or more characters to Party Members, select their token(s) and click the button below.<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --party" title="Add selected character(s) to the Party Members list">ADD PARTY MEMBERS</a></div>';
+        message += '<br>See the <a style=\'' + styles.textButton + '\' href="https://github.com/blawson69/PurseStrings" target="_blank">documentation</a> for more details.';
+
+        adminDialog('PurseStrings Config', message);
     },
+
+	commandConvert = function (msg) {
+		if(!msg.selected || !msg.selected.length){
+			adminDialog('Convert Coinage Error', 'No tokens are selected!');
+			return;
+		}
+        var validDenom = /^[s|e|g|p]p$/,
+        denom = msg.content.replace('!ps --convert', '').trim().toLowerCase();
+        if (!validDenom.test(denom)) {
+            adminDialog('Convert Coinage Error', 'Incorrect denomination.');
+			return;
+        }
+
+		_.each(msg.selected, function(obj) {
+			var token = getObj(obj._type, obj._id);
+			if(token && token.get('represents') !== '') {
+				var char = getObj('character', token.get('represents'));
+                if (char) {
+                    var char_id = char.get('id');
+                    var purse = getPurse(char_id);
+                    if (purse) {
+                        var message = '', newPurse = _.clone(purse),
+                        index = _.indexOf(DENOMINATIONS, denom);
+                        for (var x = 0; x <= index; x++) {
+                            if (DENOMINATIONS[x] == 'sp') {
+                                newPurse.sp = newPurse.sp + parseInt(newPurse.cp / 10);
+                                newPurse.cp = newPurse.cp % 10;
+                            }
+                            if (DENOMINATIONS[x] == 'ep') {
+                                newPurse.ep = newPurse.ep + parseInt(newPurse.sp / 5);
+                                newPurse.sp = newPurse.sp % 5;
+                            }
+                            if (DENOMINATIONS[x] == 'gp') {
+                                newPurse.gp = newPurse.gp + parseInt(newPurse.ep / 2);
+                                newPurse.ep = newPurse.ep % 2;
+                            }
+                            if (DENOMINATIONS[x] == 'pp') {
+                                newPurse.pp = newPurse.pp + parseInt(newPurse.gp / 10);
+                                newPurse.gp = newPurse.gp % 10;
+                            }
+                        }
+                        message += 'The coins in your Purse have been successfully converted to ' + denom.toUpperCase() + '. Your Purse is now:<br>' + prettyCoins(newPurse);
+                        message += '<br>Total weight of coins: ' + getCoinWeight(newPurse);
+                        _.each(DENOMINATIONS, function (denom) {
+                            changeDenomAmt(char_id, denom, newPurse[denom]);
+                        });
+                        showDialog('Conversion complete', char.get('name'), message, msg.who);
+                        adminDialog('Conversion complete', char.get('name') + '\'s Purse has been converted to ' + denom.toUpperCase() + '.<br>Purse: ' + prettyCoins(newPurse));
+                    } else {
+                        adminDialog('Convert Coins Error', char.get('name') + ' has no purse!');
+                    }
+                }
+			}
+		});
+	},
 
 	commandAdd = function (msg) {
 		if(!msg.selected || !msg.selected.length){
@@ -442,12 +387,7 @@ var PurseStrings = PurseStrings || (function () {
 					var character = getObj('character', token.get('represents'));
 					var purse = getPurse(character.get('id'));
 					var content = prettyCoins(purse, false) + '.';
-
-					// Count coins to determine total weight
-					var dispWeight, weight, total = purse['cp'] + purse['sp'] + purse['ep'] + purse['gp'] + purse['pp'];
-                    weight = total * 0.02;
-                    dispWeight = (weight <= 10) ? weight.toFixed(1) + '' : weight.toFixed(0);
-					content += '<br>Total weight of coins: ' + dispWeight + ' lbs.';
+					content += '<br>Total weight of coins: ' + getCoinWeight(purse);
 
 					showDialog('Purse Contents', character.get('name'), content, msg.who, whispers(msg.content));
 				} else {
@@ -603,8 +543,8 @@ var PurseStrings = PurseStrings || (function () {
                 var added = ItemDB.add(new_item, char.get('id'));
                 if (!added.success) log('Add error from PurseStrings: ' + added.err);
             } else {
-                var field = findObjs({ type: 'attribute', characterid: char.get('id'), name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure') })[0];
-                if (!field) field = createObj("attribute", {characterid: char.get('id'), name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'miscellaneous_notes' : 'treasure'), current: ''});
+                var field = findObjs({ type: 'attribute', characterid: char.get('id'), name: (isShapedSheet() ? 'miscellaneous_notes' : 'treasure') })[0];
+                if (!field) field = createObj("attribute", {characterid: char.get('id'), name: (isShapedSheet() ? 'miscellaneous_notes' : 'treasure'), current: ''});
                 var notes = field.get('current');
                 purchased = _.find(notes.split(/\n/), function (x) { return x.startsWith('PURCHASED ITEMS:'); });
                 if (purchased) items = purchased.replace('PURCHASED ITEMS:', '').trim();
@@ -812,38 +752,45 @@ var PurseStrings = PurseStrings || (function () {
 
 	parseCoins = function (cmds) {
 		// Parses the input for the coin string and returns it as an array or null if error
-		var coins = null, tmpcoins = {cp:0,sp:0,ep:0,gp:0,pp:0},
-		regex = /[:]+/i,
-		cmdString = cmds.toString().toLowerCase().replace(/,/g, "").replace(/\s+([cp|sp|ep|gp|pp])/gi, '$1').split(/\s+/);
-		if (regex.test(cmds)) {
-			// Coins sent as cp:sp:ep:gp:pp
-			_.each(cmdString, function (cmd) {
-				if (regex.test(cmd)) {
-					var msgcoins = cmd.split(':');
-					tmpcoins['cp'] = msgcoins[0] && !isNaN(msgcoins[0]) ? parseInt(msgcoins[0]) : 0;
-					tmpcoins['sp'] = msgcoins[1] && !isNaN(msgcoins[1]) ? parseInt(msgcoins[1]) : 0;
-					tmpcoins['ep'] = msgcoins[2] && !isNaN(msgcoins[2]) ? parseInt(msgcoins[2]) : 0;
-					tmpcoins['gp'] = msgcoins[3] && !isNaN(msgcoins[3]) ? parseInt(msgcoins[3]) : 0;
-					tmpcoins['pp'] = msgcoins[4] && !isNaN(msgcoins[4]) ? parseInt(msgcoins[4]) : 0;
-					coins = tmpcoins;
-				}
-			});
-		} else {
-			// Coins sent as single denomination, e.g. 30cp or 100gp
-			regex = /^\d+[cp|sp|ep|gp|pp]/i;
-			_.each(cmdString, function (cmd) {
-				if (regex.test(cmd)) {
-					if (cmd.endsWith('cp')) tmpcoins['cp'] = parseInt(cmd);
-					if (cmd.endsWith('sp')) tmpcoins['sp'] = parseInt(cmd);
-					if (cmd.endsWith('ep')) tmpcoins['ep'] = parseInt(cmd);
-					if (cmd.endsWith('gp')) tmpcoins['gp'] = parseInt(cmd);
-					if (cmd.endsWith('pp')) tmpcoins['pp'] = parseInt(cmd);
-					coins = tmpcoins;
-				}
-			});
-		}
+		var coins, compact = /^\d+:\d+:\d+:\d+:\d+$/i;
+        cmds = cmds.toString().toLowerCase().replace(/\!ps\s\-\-[a-z]{3,7}/i, '').replace(/,/g, ' ');
+        cmds = cmds.replace(/(\d+)\s+([c|s|e|g|p]p)/gi, '$1$2').trim();
+        if (cmds != '') {
+            var aCoins = cmds.split(/\s+/);
+            coins = {cp:0,sp:0,ep:0,gp:0,pp:0};
+
+            if (compact.test(cmds)) {
+                // Coins sent as cp:sp:ep:gp:pp
+                var msgcoins = aCoins[0].split(':');
+                coins.cp = parseInt(msgcoins[0]);
+                coins.sp = parseInt(msgcoins[1]);
+                coins.ep = parseInt(msgcoins[2]);
+                coins.gp = parseInt(msgcoins[3]);
+                coins.pp = parseInt(msgcoins[4]);
+            } else {
+                // Coins sent as single denominations, e.g. "30cp" or "100sp 32gp"
+                var regex = /^\d+[c|s|e|g|p]p$/;
+                _.each(aCoins, function (coin) {
+                    if (regex.test(coin)) {
+                        if (coin.endsWith('cp')) coins.cp = parseInt(coin);
+                        if (coin.endsWith('sp')) coins.sp = parseInt(coin);
+                        if (coin.endsWith('ep')) coins.ep = parseInt(coin);
+                        if (coin.endsWith('gp')) coins.gp = parseInt(coin);
+                        if (coin.endsWith('pp')) coins.pp = parseInt(coin);
+                    }
+                });
+            }
+        }
 
 		return coins;
+    },
+
+    getCoinWeight = function (purse) {
+        // Count coins to determine total weight
+        var dispWeight, weight, total = purse.cp + purse.sp + purse.ep + purse.gp + purse.pp;
+        weight = total * 0.02;
+        dispWeight = (weight < 10) ? weight.toFixed(1) + '' : weight.toFixed(0);
+        return dispWeight;
     },
 
     doublePrice = function (price) {
@@ -871,84 +818,88 @@ var PurseStrings = PurseStrings || (function () {
     },
 
     isPursed = function (char_id) {
-        // Returns whether or not the character has been "pursed"
-        //(character and currency IDs added to state storage)
-        var result = false;
-        if ( _.find(state['PURSESTRINGS'].pursed, function(char) { return char.char_id == char_id; }) ) result = true;
-        return result;
+        // Return whether character has minimum required currency fields
+        var ids = [], amts = [];
+        _.each(DENOMINATIONS, function (denom) {
+            var d_id = findDenomID(char_id, denom);
+            if (d_id != '') ids.push(d_id);
+        });
+
+        _.each(DENOMINATIONS, function (denom) {
+            var a_id = findDenomQuantID(char_id, denom);
+            if (a_id != '') amts.push(a_id);
+        });
+
+        return (_.size(ids) == 5 && _.size(amts) == 5);
     },
 
 	getPurse = function (char_id) {
-		// Returns an array holding the given character's Purse currency
-		var purse = [],
-        char = _.find(state['PURSESTRINGS'].pursed, function(x) { return x.char_id == char_id; });
+		// Returns an object holding the given character's Purse currency
+		var purse = {cp:0,sp:0,ep:0,gp:0,pp:0},
+        char = getObj('character', char_id);
 		if (char) {
-			purse['cp'] = parseInt(getAttrByName(char_id, (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.cp_id + '_quantity' : 'cp'))) || 0;
-			purse['sp'] = parseInt(getAttrByName(char_id, (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.sp_id + '_quantity' : 'sp'))) || 0;
-			purse['ep'] = parseInt(getAttrByName(char_id, (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.ep_id + '_quantity' : 'ep'))) || 0;
-			purse['gp'] = parseInt(getAttrByName(char_id, (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.gp_id + '_quantity' : 'gp'))) || 0;
-			purse['pp'] = parseInt(getAttrByName(char_id, (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.pp_id + '_quantity' : 'pp'))) || 0;
-		} else {
-			purse = null;
+            _.each(DENOMINATIONS, function (denom) {
+                purse[denom] = getDenomAmt(char_id, denom);
+            });
 		}
 
 		return purse;
 	},
 
-	changePurse = function (pockets, char_id, type='add') {
+	changePurse = function (cmd_content, char_id, type='add') {
 		// Add or subtract from a character's Purse
         // Returns boolean result
 		var result = true;
 		if (isPursed(char_id)) {
-			var coins = parseCoins(pockets);
+			var coins = parseCoins(cmd_content);
 			if (coins) {
 				var purse = getPurse(char_id);
 
 				if (type == 'add') {
-					purse['cp'] += coins['cp'];
-					purse['sp'] += coins['sp'];
-					purse['ep'] += coins['ep'];
-					purse['gp'] += coins['gp'];
-					purse['pp'] += coins['pp'];
+					purse.cp += coins['cp'];
+					purse.sp += coins['sp'];
+					purse.ep += coins['ep'];
+					purse.gp += coins['gp'];
+					purse.pp += coins['pp'];
 				} else {
 					var coinsVal = coins['cp'] + (coins['sp'] * 10) + (coins['ep'] * 50) + (coins['gp'] * 100) + (coins['pp'] * 1000);
-					var purseVal = purse['cp'] + (purse['sp'] * 10) + (purse['ep'] * 50) + (purse['gp'] * 100) + (purse['pp'] * 1000);
+					var purseVal = purse.cp + (purse.sp * 10) + (purse.ep * 50) + (purse.gp * 100) + (purse.pp * 1000);
 
 					if (coinsVal > purseVal) {
 						result = false;
 					} else {
 						// platinum pieces
 						if (coins['pp'] > 0) {
-							if (purse['pp'] >= coins['pp']) {
-								purse['pp'] -= coins['pp'];
+							if (purse.pp >= coins['pp']) {
+								purse.pp -= coins['pp'];
 							} else {
-								while (purse['pp'] < coins['pp'] && purse['gp'] >= 10) {
-									purse['pp'] += 1;
-									purse['gp'] -= 10;
+								while (purse.pp < coins['pp'] && purse.gp >= 10) {
+									purse.pp += 1;
+									purse.gp -= 10;
 								}
-								if (purse['pp'] >= coins['pp']) {
-									purse['pp'] -= coins['pp'];
+								if (purse.pp >= coins['pp']) {
+									purse.pp -= coins['pp'];
 								} else {
-									while (purse['pp'] < coins['pp'] && purse['ep'] >= 20) {
-										purse['pp'] += 1;
-										purse['ep'] -= 20;
+									while (purse.pp < coins['pp'] && purse.ep >= 20) {
+										purse.pp += 1;
+										purse.ep -= 20;
 									}
-									if (purse['pp'] >= coins['pp']) {
-										purse['pp'] -= coins['pp'];
+									if (purse.pp >= coins['pp']) {
+										purse.pp -= coins['pp'];
 									} else {
-										while (purse['pp'] < coins['pp'] && purse['sp'] >= 100) {
-											purse['pp'] += 1;
-											purse['sp'] -= 100;
+										while (purse.pp < coins['pp'] && purse.sp >= 100) {
+											purse.pp += 1;
+											purse.sp -= 100;
 										}
-										if (purse['pp'] >= coins['pp']) {
-											purse['pp'] -= coins['pp'];
+										if (purse.pp >= coins['pp']) {
+											purse.pp -= coins['pp'];
 										} else {
-											while (purse['pp'] < coins['pp'] && purse['cp'] >= 1000) {
-												purse['pp'] += 1;
-												purse['cp'] -= 1000;
+											while (purse.pp < coins['pp'] && purse.cp >= 1000) {
+												purse.pp += 1;
+												purse.cp -= 1000;
 											}
-											if (purse['pp'] >= coins['pp']) {
-												purse['pp'] -= coins['pp'];
+											if (purse.pp >= coins['pp']) {
+												purse.pp -= coins['pp'];
 											} else {
 												result = false;
 												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['pp'] + 'pp?');
@@ -961,36 +912,36 @@ var PurseStrings = PurseStrings || (function () {
 
 						// gold pieces
 						if (coins['gp'] > 0) {
-							if (purse['gp'] >= coins['gp']) {
-								purse['gp'] -= coins['gp'];
+							if (purse.gp >= coins['gp']) {
+								purse.gp -= coins['gp'];
 							} else {
-								while (purse['gp'] < coins['gp'] && purse['pp'] > 0) {
-									purse['gp'] += 10;
-									purse['pp'] -= 1;
+								while (purse.gp < coins['gp'] && purse.pp > 0) {
+									purse.gp += 10;
+									purse.pp -= 1;
 								}
-								if (purse['gp'] >= coins['gp']) {
-									purse['gp'] -= coins['gp'];
+								if (purse.gp >= coins['gp']) {
+									purse.gp -= coins['gp'];
 								} else {
-									while (purse['gp'] < coins['gp'] && purse['ep'] > 2) {
-										purse['gp'] += 1;
-										purse['ep'] -= 2;
+									while (purse.gp < coins['gp'] && purse.ep > 2) {
+										purse.gp += 1;
+										purse.ep -= 2;
 									}
-									if (purse['gp'] >= coins['gp']) {
-										purse['gp'] -= coins['gp'];
+									if (purse.gp >= coins['gp']) {
+										purse.gp -= coins['gp'];
 									} else {
-										while (purse['gp'] < coins['gp'] && purse['sp'] > 10) {
-											purse['gp'] += 1;
-											purse['sp'] -= 10;
+										while (purse.gp < coins['gp'] && purse.sp > 10) {
+											purse.gp += 1;
+											purse.sp -= 10;
 										}
-										if (purse['gp'] >= coins['gp']) {
-											purse['gp'] -= coins['gp'];
+										if (purse.gp >= coins['gp']) {
+											purse.gp -= coins['gp'];
 										} else {
-											while (purse['gp'] < coins['gp'] && purse['cp'] > 100) {
-												purse['gp'] += 1;
-												purse['cp'] -= 100;
+											while (purse.gp < coins['gp'] && purse.cp > 100) {
+												purse.gp += 1;
+												purse.cp -= 100;
 											}
-											if (purse['gp'] >= coins['gp']) {
-												purse['gp'] -= coins['gp'];
+											if (purse.gp >= coins['gp']) {
+												purse.gp -= coins['gp'];
 											} else {
 												result = false;
 												adminDialog('Change Purse Error', '/w GM Not enough coinage to cover ' + coins['gp'] + 'gp?');
@@ -1003,36 +954,36 @@ var PurseStrings = PurseStrings || (function () {
 
 						// electrum pieces
 						if (coins['ep'] > 0) {
-							if (purse['ep'] >= coins['ep']) {
-								purse['ep'] -= coins['ep'];
+							if (purse.ep >= coins['ep']) {
+								purse.ep -= coins['ep'];
 							} else {
-								while (purse['ep'] < coins['ep'] && purse['gp'] > 0) {
-									purse['ep'] += 2;
-									purse['gp'] -= 1;
+								while (purse.ep < coins['ep'] && purse.gp > 0) {
+									purse.ep += 2;
+									purse.gp -= 1;
 								}
-								if (purse['ep'] >= coins['ep']) {
-									purse['ep'] -= coins['ep'];
+								if (purse.ep >= coins['ep']) {
+									purse.ep -= coins['ep'];
 								} else {
-									while (purse['ep'] < coins['ep'] && purse['pp'] > 0) {
-										purse['ep'] += 20;
-										purse['pp'] -= 1;
+									while (purse.ep < coins['ep'] && purse.pp > 0) {
+										purse.ep += 20;
+										purse.pp -= 1;
 									}
-									if (purse['ep'] >= coins['ep']) {
-										purse['ep'] -= coins['ep'];
+									if (purse.ep >= coins['ep']) {
+										purse.ep -= coins['ep'];
 									} else {
-										while (purse['ep'] < coins['ep'] && purse['sp'] > 5) {
-											purse['ep'] += 1;
-											purse['sp'] -= 5;
+										while (purse.ep < coins['ep'] && purse.sp > 5) {
+											purse.ep += 1;
+											purse.sp -= 5;
 										}
-										if (purse['ep'] >= coins['ep']) {
-											purse['ep'] -= coins['ep'];
+										if (purse.ep >= coins['ep']) {
+											purse.ep -= coins['ep'];
 										} else {
-											while (purse['ep'] < coins['ep'] && purse['cp'] > 50) {
-												purse['ep'] += 1;
-												purse['cp'] -= 50;
+											while (purse.ep < coins['ep'] && purse.cp > 50) {
+												purse.ep += 1;
+												purse.cp -= 50;
 											}
-											if (purse['ep'] >= coins['ep']) {
-												purse['ep'] -= coins['ep'];
+											if (purse.ep >= coins['ep']) {
+												purse.ep -= coins['ep'];
 											} else {
 												result = false;
 												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['ep'] + 'ep?');
@@ -1045,36 +996,36 @@ var PurseStrings = PurseStrings || (function () {
 
 						// silver pieces
 						if (coins['sp'] > 0) {
-							if (purse['sp'] >= coins['sp']) {
-								purse['sp'] -= coins['sp'];
+							if (purse.sp >= coins['sp']) {
+								purse.sp -= coins['sp'];
 							} else {
-								while (purse['sp'] < coins['sp'] && purse['ep'] > 5) {
-									purse['sp'] += 5;
-									purse['ep'] -= 1;
+								while (purse.sp < coins['sp'] && purse.ep > 5) {
+									purse.sp += 5;
+									purse.ep -= 1;
 								}
-								if (purse['sp'] >= coins['sp']) {
-									purse['sp'] -= coins['sp'];
+								if (purse.sp >= coins['sp']) {
+									purse.sp -= coins['sp'];
 								} else {
-									while (purse['sp'] < coins['sp'] && purse['gp'] > 0) {
-										purse['sp'] += 10;
-										purse['gp'] -= 1;
+									while (purse.sp < coins['sp'] && purse.gp > 0) {
+										purse.sp += 10;
+										purse.gp -= 1;
 									}
-									if (purse['sp'] >= coins['sp']) {
-										purse['sp'] -= coins['sp'];
+									if (purse.sp >= coins['sp']) {
+										purse.sp -= coins['sp'];
 									} else {
-										while (purse['sp'] < coins['sp'] && purse['pp'] > 0) {
-											purse['sp'] += 100;
-											purse['pp'] -= 1;
+										while (purse.sp < coins['sp'] && purse.pp > 0) {
+											purse.sp += 100;
+											purse.pp -= 1;
 										}
-										if (purse['sp'] >= coins['sp']) {
-											purse['sp'] -= coins['sp'];
+										if (purse.sp >= coins['sp']) {
+											purse.sp -= coins['sp'];
 										} else {
-											while (purse['sp'] < coins['sp'] && purse['cp'] > 10) {
-												purse['sp'] += 1;
-												purse['cp'] -= 10;
+											while (purse.sp < coins['sp'] && purse.cp > 10) {
+												purse.sp += 1;
+												purse.cp -= 10;
 											}
-											if (purse['sp'] >= coins['sp']) {
-												purse['sp'] -= coins['sp'];
+											if (purse.sp >= coins['sp']) {
+												purse.sp -= coins['sp'];
 											} else {
 												result = false;
 												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['sp'] + 'sp?');
@@ -1087,36 +1038,36 @@ var PurseStrings = PurseStrings || (function () {
 
 						// copper pieces
 						if (coins['cp'] > 0) {
-							if (purse['cp'] >= coins['cp']) {
-								purse['cp'] -= coins['cp'];
+							if (purse.cp >= coins['cp']) {
+								purse.cp -= coins['cp'];
 							} else {
-								while (purse['cp'] < coins['cp'] && purse['sp'] > 0) {
-									purse['cp'] += 10;
-									purse['sp'] -= 1;
+								while (purse.cp < coins['cp'] && purse.sp > 0) {
+									purse.cp += 10;
+									purse.sp -= 1;
 								}
-								if (purse['cp'] >= coins['cp']) {
-									purse['cp'] -= coins['cp'];
+								if (purse.cp >= coins['cp']) {
+									purse.cp -= coins['cp'];
 								} else {
-									while (purse['cp'] < coins['cp'] && purse['ep'] > 0) {
-										purse['cp'] += 50;
-										purse['ep'] -= 1;
+									while (purse.cp < coins['cp'] && purse.ep > 0) {
+										purse.cp += 50;
+										purse.ep -= 1;
 									}
-									if (purse['cp'] >= coins['cp']) {
-										purse['cp'] -= coins['cp'];
+									if (purse.cp >= coins['cp']) {
+										purse.cp -= coins['cp'];
 									} else {
-										while (purse['cp'] < coins['cp'] && purse['gp'] > 0) {
-											purse['cp'] += 100;
-											purse['gp'] -= 1;
+										while (purse.cp < coins['cp'] && purse.gp > 0) {
+											purse.cp += 100;
+											purse.gp -= 1;
 										}
-										if (purse['cp'] >= coins['cp']) {
-											purse['cp'] -= coins['cp'];
+										if (purse.cp >= coins['cp']) {
+											purse.cp -= coins['cp'];
 										} else {
-											while (purse['cp'] < coins['cp'] && purse['pp'] > 0) {
-												purse['cp'] += 1000;
-												purse['pp'] -= 1;
+											while (purse.cp < coins['cp'] && purse.pp > 0) {
+												purse.cp += 1000;
+												purse.pp -= 1;
 											}
-											if (purse['cp'] >= coins['cp']) {
-												purse['cp'] -= coins['cp'];
+											if (purse.cp >= coins['cp']) {
+												purse.cp -= coins['cp'];
 											} else {
 												result = false;
 												adminDialog('Change Purse Error', 'Not enough coinage to cover ' + coins['cp'] + 'cp?');
@@ -1129,18 +1080,9 @@ var PurseStrings = PurseStrings || (function () {
 					}
 				}
 
-                var char = _.find(state['PURSESTRINGS'].pursed, function(x) { return x.char_id == char_id; });
-				var cp = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.cp_id + '_quantity' : 'cp') })[0];
-				var sp = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.sp_id + '_quantity' : 'sp') })[0];
-				var ep = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.ep_id + '_quantity' : 'ep') })[0];
-				var gp = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.gp_id + '_quantity' : 'gp') })[0];
-				var pp = findObjs({ type: 'attribute', characterid: char_id, name: (state['PURSESTRINGS'].sheet == '5e Shaped' ? 'repeating_currency_' + char.pp_id + '_quantity' : 'pp') })[0];
-
-				cp.setWithWorker({ current: purse['cp'] });
-				sp.setWithWorker({ current: purse['sp'] });
-				ep.setWithWorker({ current: purse['ep'] });
-				gp.setWithWorker({ current: purse['gp'] });
-				pp.setWithWorker({ current: purse['pp'] });
+                _.each(DENOMINATIONS, function (denom) {
+                    changeDenomAmt(char_id, denom, purse[denom]);
+                });
 			} else {
 				result = false;
 				log('PurseStrings: No coinage was indicated or coinage syntax was incorrect.');
@@ -1157,10 +1099,92 @@ var PurseStrings = PurseStrings || (function () {
 		return result;
 	},
 
+    getDenomAmt = function (char_id, denom) {
+        var amt, char = getObj('character', char_id);
+        if (char) {
+            var amtField, denom = denom.toLowerCase();
+            if (isShapedSheet()) {
+                var denom_id = findDenomID(char_id, denom);
+                amtField = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + denom_id + '_quantity' })[0];
+            } else {
+                amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom })[0];
+            }
+            if (amtField) amt = parseInt(amtField.get('current'));
+            else log('amtField not valid!');
+        } //if char
+        return amt;
+    },
+
+    changeDenomAmt = function (char_id, denom, amt) {
+        var char = getObj('character', char_id);
+        if (char) {
+            var amtField, denom = denom.toLowerCase();
+            if (isShapedSheet()) {
+                var denom_id = findDenomID(char_id, denom);
+                amtField = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + denom_id + '_quantity' })[0];
+            } else {
+                amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom })[0];
+            }
+            if (amtField) amtField.setWithWorker({ current: amt });
+        } //if char
+    },
+
+    validateDenomination = function (char_id, denom) {
+        if (isShapedSheet()) {
+            var row_id = findDenomID(char_id, denom);
+            var currency = [
+                {name: 'Copper', acronym: 'CP', value: 0.001, weight: 0.02, border: 'COPPER', weight_system: 'POUNDS', quantity: 0},
+                {name: 'Silver', acronym: 'SP', value: 0.01, weight: 0.02, border: 'SILVER', weight_system: 'POUNDS', quantity: 0},
+                {name: 'Electrum', acronym: 'EP', value: 0.5, weight: 0.02, border: 'ELECTRUM', weight_system: 'POUNDS', quantity: 0},
+                {name: 'Gold', acronym: 'GP', value: 1, weight: 0.02, border: 'GOLD', weight_system: 'POUNDS', quantity: 0},
+                {name: 'Platinum', acronym: 'PP', value: 10, weight: 0.02, border: 'PLATINUM', weight_system: 'POUNDS', quantity: 0}
+            ]
+
+            if (row_id == '') {
+                // Create denomination if not found
+                var tmpDenom = _.find(currency, function (cur) { return cur.acronym == denom.toUpperCase(); });
+                const data = {};
+                row_id = generateRowID();
+                var repString = 'repeating_currency_' + row_id;
+                Object.keys(tmpDenom).forEach(function (field) {
+                    data[repString + '_' + field] = tmpDenom[field];
+                });
+                setAttrs(char_id, data);
+            } else {
+                // New characters won't have a quantity yet for established denominations
+                var quant_id = findDenomQuantID(char_id, denom);
+                if (quant_id == '') {
+                    var curr_field = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + row_id + '_quantity', current: 0});
+                }
+            }
+        } else {
+            var curr_field = findObjs({ type: 'attribute', characterid: char_id, name: denom })[0];
+            if (!curr_field) curr_field = createObj("attribute", {characterid: char_id, name: denom, current: 0});
+        }
+    },
+
+    findDenomID = function (char_id, denom) {
+        var row_id = '', re = new RegExp('^repeating_currency_[^_]+_acronym$', 'i');
+        var items = _.filter(findObjs({type: 'attribute', characterid: char_id}), function (x) { return x.get('name').match(re) !== null; });
+        var row = _.find(items, function (item) { return item.get('current').toLowerCase() == denom; });
+        if (row) row_id = row.get('name').split('_')[2];
+        return row_id;
+    },
+
+    findDenomQuantID = function (char_id, denom) {
+        var row_id = '', denom_id = findDenomID(char_id, denom);
+        if (denom_id != '') {
+            var re = new RegExp('^repeating_currency_' + denom_id + '_quantity$', 'i');
+            var item = _.find(findObjs({type: 'attribute', characterid: char_id}), function (x) { return x.get('name').match(re) !== null; });
+            if (item) row_id = item.get('name').split('_')[2];
+        }
+        return row_id;
+    },
+
 	showDialog = function (title, name, content, player, whisper=true) {
         var body, whisperTo = '', gm = /\(GM\)/i;
         if (whisper) whisperTo = '/w ' + (gm.test(player) ? 'GM ' : '"' + player + '" ');
-        if (state['PURSESTRINGS'].sheet == '5e Shaped') {
+        if (isShapedSheet()) {
             body = '&{template:5e-shaped} {{title=' + title + '}} {{content=' + content + '}}';
             if (name !== '') body += ' {{show_character_name=1}} {{character_name=' + name + '}}';
         } else {
@@ -1172,7 +1196,7 @@ var PurseStrings = PurseStrings || (function () {
 	},
 
 	adminDialog = function (title, content) {
-        if (state['PURSESTRINGS'].sheet == '5e Shaped') {
+        if (isShapedSheet()) {
             var message = '/w GM &{template:5e-shaped} {{title=' + title + '}} {{content=' + content + '}}';
             sendChat('PurseStrings', message, null, {noarchive:true});
         } else {
@@ -1185,11 +1209,11 @@ var PurseStrings = PurseStrings || (function () {
 	prettyCoins = function (coins, dropZero=false) {
 		// Return a pretty (grammatically speaking) string of coins from a coin array for dialog
 		var result = '', joiner = ' ', tmpres = [];
-        if (coins['pp'] > 0 || !dropZero) tmpres.push(coins['pp'] + 'pp');
-        if (coins['gp'] > 0 || !dropZero) tmpres.push(coins['gp'] + 'gp');
-        if (coins['ep'] > 0 || !dropZero) tmpres.push(coins['ep'] + 'ep');
-        if (coins['sp'] > 0 || !dropZero) tmpres.push(coins['sp'] + 'sp');
         if (coins['cp'] > 0 || !dropZero) tmpres.push(coins['cp'] + 'cp');
+        if (coins['sp'] > 0 || !dropZero) tmpres.push(coins['sp'] + 'sp');
+        if (coins['ep'] > 0 || !dropZero) tmpres.push(coins['ep'] + 'ep');
+        if (coins['gp'] > 0 || !dropZero) tmpres.push(coins['gp'] + 'gp');
+        if (coins['pp'] > 0 || !dropZero) tmpres.push(coins['pp'] + 'pp');
 		if (tmpres.length > 1) tmpres[tmpres.length-1] = 'and ' + tmpres[tmpres.length-1];
 		if (tmpres.length > 2) joiner = ', '
 		result = tmpres.join(joiner);
@@ -1197,11 +1221,21 @@ var PurseStrings = PurseStrings || (function () {
 	},
 
     addShowPurse = function (char_id) {
-        // Adds an ability to the character during setup for the --show command
-        var abilities = findObjs({ name: 'ShowPurse', type: 'ability', characterid: char_id })[0];
+        var retval = false, abilities = findObjs({ name: 'ShowPurse', type: 'ability', characterid: char_id })[0];
         if (!abilities) {
             var psmacro = createObj("ability", { name: 'ShowPurse', characterid: char_id, action: '!ps --show --whisper', istokenaction: true });
+            retval = true;
         }
+        return retval;
+    },
+
+    addShowInventory = function (char_id) {
+        var retval = false, abilities = findObjs({ name: 'ShowInventory', type: 'ability', characterid: char_id })[0];
+        if (!abilities) {
+            var psmacro = createObj("ability", { name: 'ShowInventory', characterid: char_id, action: '!ps --invlist @{selected|token_id}', istokenaction: true });
+            retval = true;
+        }
+        return retval;
     },
 
     whispers = function (cmds) {
@@ -1251,29 +1285,22 @@ var PurseStrings = PurseStrings || (function () {
         return generateUUID().replace(/_/g, "Z");
     },
 
-    unPurse = function (char_id) {
-        var char_name = '[character not found]';
-        var pursed = _.find(state['PURSESTRINGS'].pursed, function (char) {return char.char_id == char_id});
-        if (pursed) char_name = pursed.char_name;
-        state['PURSESTRINGS'].pursed = _.reject(state['PURSESTRINGS'].pursed, function (char) {return char.char_id == char_id});
-        state['PURSESTRINGS'].partyMembers = _.reject(state['PURSESTRINGS'].partyMembers, function(id) {return id == char_id;});
-        var character = getObj('character', char_id);
-        if (character) {
-            var ability = findObjs({name: 'ShowPurse', type: 'ability', characterid: char_id})[0];
-            if (ability) ability.remove();
-        }
-        adminDialog('Character Removed', char_name + ' has been removed from PurseStrings.');
-        commandPursed();
+    commandSheet = function () {
+        state['PURSESTRINGS'].sheet = detectSheet();
+        adminDialog('Complete', 'Sheet set to "' + state['PURSESTRINGS'].sheet + '"');
     },
 
     detectSheet = function () {
-        var sheet = 'Unknown', char = findObjs({type: 'character'})[0];
+        var sheet = '5th Edition OGL', char = findObjs({type: 'character'})[0];
         if (char) {
             var charAttrs = findObjs({type: 'attribute', characterid: char.get('id')}, {caseInsensitive: true});
             if (_.find(charAttrs, function (x) { return x.get('name') == 'character_sheet' && x.get('current').search('Shaped') != -1; })) sheet = '5e Shaped';
-            if (_.find(charAttrs, function (x) { return x.get('name').search('mancer') != -1; })) sheet = '5th Edition OGL';
         }
         return sheet;
+    },
+
+    isShapedSheet = function () {
+        return (typeof state['PURSESTRINGS'].sheet != 'undefined' && state['PURSESTRINGS'].sheet == '5e Shaped');
     },
 
     useItemDB = function () {

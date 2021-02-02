@@ -59,7 +59,7 @@ If a Merchant buys an item from a player that is not already in their inventory,
 The GM Notes field is a [WYSIWYG](https://en.wikipedia.org/wiki/WYSIWYG) editor, and cutting and pasting from the web or a word processor like Google Docs, Microsoft Word or Pages can carry over formatting which causes problems in processing your Inventory. If you are having problems with inventory showing in chat, try cutting from your original source (the web, word processor, etc.) and paste into a text editor *first*, or create the content in the text editor itself. Then cut from the text editor and past into the GM Notes field.
 
 ### Characters as Merchants
-If you wish to use a character as a Merchant (as in previous versions of PurseStrings), you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
+If you wish to use a character as a Merchant, you must make the Merchant token the *default token* for the character. There are two ways to ensure the Merchant's Inventory remains up-to-date on the character:
 - If the Merchant token's name is the same as the character's name, the default token will automatically be updated whenever inventory changes. Be aware that all other token settings will be saved, including rotation, status markers, auras, etc.
 - If the names do not match, you will need to update the default token manually using the [`--update-merchant` command](#--update-merchant) **before** removing the token from the VTT.
 
@@ -144,7 +144,7 @@ To display the contents of a character's Purse, use the `--show` command. It wil
 
 `!ps --show`
 
-You may also send an optional `--whisper` command to make `--show` whisper the results. This is default when [setting up your characters](#--setup) for the first time.
+You may also send an optional `--whisper` command to make `--show` whisper the results. This is default in the "ShowPurse" token action added during [character setup](#--setup).
 
 `!ps --show --whisper`
 
@@ -191,7 +191,7 @@ As with the `--subt` command ([above](#--subt)), the exchange will fail if the a
 ### --buy
 Characters can also pay for goods & services as well. PurseStrings handles the monetary transaction along with updating the Merchant's Inventory ([see above](#merchant-setup)). On a successful transaction, a character who has purchased an item will have that item recorded on their sheet if the [record purchases](#--config) option is turned on.
 
-To exchange money for an item or service, you use the `--buy` command along with the IDs of tokens representing both the buyer and the seller. Both IDs must be included as parameters because of the way the API handles targeted tokens. Also required is the amount for which the item is being sold using `--amt|<coinage>`, and the name of the item using `--item|<item_name>`.
+To exchange money for an item or service, you use the `--buy` command. The IDs of tokens representing both the buyer and the seller must be included, along with the purchase amount and the name of the item.
 
 `!ps --buy --buyer|<buyer_token_id> --seller|<seller_token_id> --amt|50gp --item|Potion of Healing`
 

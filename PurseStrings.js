@@ -85,7 +85,7 @@ var PurseStrings = PurseStrings || (function () {
   						if (playerIsGM(msg.playerid)) commandInventory(msg.content);
   						break;
                     case '--sheet':
-  						if (playerIsGM(msg.playerid)) commandSheet();
+  						if (playerIsGM(msg.playerid)) commandSheet(msg.content);
   						break;
                     case '--update-merchant':
   						if (playerIsGM(msg.playerid)) commandUpdateMerch(msg.selected);
@@ -1285,13 +1285,18 @@ var PurseStrings = PurseStrings || (function () {
         return generateUUID().replace(/_/g, "Z");
     },
 
-    commandSheet = function () {
-        state['PURSESTRINGS'].sheet = detectSheet();
+    commandSheet = function (msg) {
+        var sheet = msg.replace('!ps --sheet', '').trim().toLowerCase();
+        if (sheet == '') state['PURSESTRINGS'].sheet = detectSheet();
+        else if (sheet.includes('shaped')) state['PURSESTRINGS'].sheet = '5e Shaped';
+        else if (sheet.includes('by roll20') || sheet.includes('ogl')) state['PURSESTRINGS'].sheet = '5th Edition OGL';
+        else state['PURSESTRINGS'].sheet = 'Unknown Sheet';
         adminDialog('Complete', 'Sheet set to "' + state['PURSESTRINGS'].sheet + '"');
     },
 
     detectSheet = function () {
-        var sheet = '5th Edition OGL', char = findObjs({type: 'character'})[0];
+        var sheet = '5th Edition OGL', chars = findObjs({type: 'character'});
+        var char = _.find(chars, function (c) {return c.get('controlledby') !== '' && c.get('controlledby') !== 'all'; });
         if (char) {
             var charAttrs = findObjs({type: 'attribute', characterid: char.get('id')}, {caseInsensitive: true});
             if (_.find(charAttrs, function (x) { return x.get('name') == 'character_sheet' && x.get('current').search('Shaped') != -1; })) sheet = '5e Shaped';

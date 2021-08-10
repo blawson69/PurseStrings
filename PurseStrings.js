@@ -819,18 +819,17 @@ var PurseStrings = PurseStrings || (function () {
 
     isPursed = function (char_id) {
         // Return whether character has minimum required currency fields
-        var ids = [], amts = [];
+        var ids = [];
         _.each(DENOMINATIONS, function (denom) {
-            var d_id = findDenomID(char_id, denom);
-            if (d_id != '') ids.push(d_id);
+            if (isShapedSheet()) {
+                var d_id = findDenomID(char_id, denom);
+                if (d_id != '') ids.push(d_id);
+            } else {
+                var what = getAttrByName(char_id, denom, 'current');
+                ids.push(what);
+            }
         });
-
-        _.each(DENOMINATIONS, function (denom) {
-            var a_id = findDenomQuantID(char_id, denom);
-            if (a_id != '') amts.push(a_id);
-        });
-
-        return (_.size(ids) == 5 && _.size(amts) == 5);
+        return (_.size(ids) == 5);
     },
 
 	getPurse = function (char_id) {
@@ -1111,7 +1110,7 @@ var PurseStrings = PurseStrings || (function () {
             }
             if (amtField) amt = parseInt(amtField.get('current'));
             else log('amtField not valid!');
-        } //if char
+        }
         return amt;
     },
 

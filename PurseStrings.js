@@ -119,35 +119,35 @@ var PurseStrings = PurseStrings || (function () {
 
 		_.each(msg.selected, function(obj) {
 			var token = getObj(obj._type, obj._id);
-			if(token) {
+			if (token) {
 				if (token.get('represents') !== '') {
 					var char_id = token.get('represents');
-					var character = getObj('character', token.get('represents'));
+					var character = getObj('character', char_id);
 
-                    //if (!isPursed(char_id)) {
-                    //}
-                    _.each(DENOMINATIONS, function (denom) {
-                        validateDenomination(char_id, denom);
-                    });
+                    if (character) {
+                        _.each(DENOMINATIONS, function (denom) {
+                            validateDenomination(char_id, denom);
+                        });
 
-                    var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
-                    if (addShowPurse(char_id)) {
-                        message += ' A "ShowPurse" action was added to enable viewing of their Purse by the controlling player.';
-                    }
-                    if (isMerchant()) {
-                        if (addShowInventory(token.get('id'))) {
-                            message += '<br>A "ShowInventory" action was also added to this Merchant.';
+                        var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
+                        if (addShowPurse(char_id)) {
+                            message += ' A "ShowPurse" action was added to enable viewing of their Purse by the controlling player.';
                         }
-                    }
-                    var coins = parseCoins(msg.content);
-                    if (coins) {
-                        var initpurse = changePurse(msg.content, char_id, 'add');
-                        if (initpurse) {
-                            message += '<br>Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
+                        if (isMerchant()) {
+                            if (addShowInventory(token.get('id'))) {
+                                message += '<br>A "ShowInventory" action was also added to this Merchant.';
+                            }
                         }
-                    }
+                        var coins = parseCoins(msg.content);
+                        if (coins) {
+                            var initpurse = changePurse(msg.content, char_id, 'add');
+                            if (initpurse) {
+                                message += '<br>Also, ' + prettyCoins(coins, true) + ' have been added to their Purse.';
+                            }
+                        }
 
-                    adminDialog('Setup Complete', message);
+                        adminDialog('Setup Complete', message);
+                    }
 				}
 			}
 		});

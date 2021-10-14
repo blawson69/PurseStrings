@@ -15,10 +15,10 @@ var PurseStrings = PurseStrings || (function () {
 
     //---- INFO ----//
 
-    var version = '6.0',
+    var version = '6.0.1',
     debugMode = false,
     styles = {
-        box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px; margin-left: -40px; margin-right: 0px;',
+        box:  'background-color: #fff; border: 1px solid #000; padding: 8px 10px; border-radius: 6px;',
         title: 'padding: 0 0 10px 0; color: ##591209; font-size: 1.5em; font-weight: bold; font-variant: small-caps; font-family: "Times New Roman",Times,serif;',
         subtitle: 'margin-top: -4px; padding-bottom: 4px; color: #666; font-size: 1.25em; font-variant: small-caps;',
         list:  'list-style-type: circle; margin-left: 4px; list-style-position: inside;',
@@ -29,7 +29,7 @@ var PurseStrings = PurseStrings || (function () {
         unavail: 'color: #636363; font-style: italic;', right: 'float: right; height: 1.125em;',
         fixedShow: 'max-width: 130px; height: 1.125em; vertical-align: text-bottom; padding: 0; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
         fixedHide: 'max-width: 180px; height: 1.125em; padding: 0; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
-        alert: 'color: #C91010; font-size: 1.25em; font-weight: bold; text-align: center;',
+        alert: 'color: #C91010; text-align: center; border: 1px solid #B31D1D; border-radius: 7px; padding: 6px 3px 0; margin-bottom: 12px;',
         code: 'font-family: "Courier New", Courier, monospace; font-size: 1.25em; padding-bottom: 6px;'
     },
     DENOMINATIONS = ['cp','sp','ep','gp','pp'],
@@ -124,11 +124,11 @@ var PurseStrings = PurseStrings || (function () {
 					var char_id = token.get('represents');
 					var character = getObj('character', token.get('represents'));
 
-                    if (!isPursed(char_id)) {
-                        _.each(DENOMINATIONS, function (denom) {
-                            validateDenomination(char_id, denom);
-                        });
-                    }
+                    //if (!isPursed(char_id)) {
+                    //}
+                    _.each(DENOMINATIONS, function (denom) {
+                        validateDenomination(char_id, denom);
+                    });
 
                     var message = '<b>Success!</b><br>PurseStrings setup is complete for ' + character.get('name') + '.';
                     if (addShowPurse(char_id)) {
@@ -240,6 +240,11 @@ var PurseStrings = PurseStrings || (function () {
             if (parts[0] == 'np') state['PURSESTRINGS'].recPurchases = !state['PURSESTRINGS'].recPurchases;
             if (parts[0] == 'ext') state['PURSESTRINGS'].useExtScripts = !state['PURSESTRINGS'].useExtScripts;
         });
+
+        if (detectSheet() != state['PURSESTRINGS'].sheet) {
+            message += '<div style="' + styles.alert + '">⚠️ You are using the <b>' + state['PURSESTRINGS'].sheet + '</b> sheet but PurseStrings has detected your sheet is the <b>' + detectSheet() + '</b> sheet.<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + ' background-color: #B31D1D;\' href="!ps --sheet ' + detectSheet() + '">FIX SHEET</a></div></div>';
+        }
+        //message += 'You are using the <b>' + state['PURSESTRINGS'].sheet + '</b> sheet. If this is incorrect, <a style=\'' + styles.textButton + '\' href="!ps --sheet ?{Sheet|5th Edition OGL|5e Shaped}" title="Change sheet">click here</a>.<br><br>';
 
         message += 'To setup a character with the PurseStrings token actions and to ensure they have the required denominations of coins, select their token(s) and click the button below.';
         message += '<div style=\'' + styles.buttonWrapper + '\'><a style=\'' + styles.button + '\' href="!ps --setup ?{Startup Money|}" title="Setup selected character(s)">SETUP CHARACTER</a></div>';
@@ -1099,17 +1104,17 @@ var PurseStrings = PurseStrings || (function () {
 	},
 
     getDenomAmt = function (char_id, denom) {
-        var amt, char = getObj('character', char_id);
+        var amt = 0, char = getObj('character', char_id);
         if (char) {
             var amtField, denom = denom.toLowerCase();
             if (isShapedSheet()) {
                 var denom_id = findDenomID(char_id, denom);
                 amtField = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + denom_id + '_quantity' })[0];
             } else {
-                amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom })[0];
+                amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom }, {caseInsensitive: true})[0];
             }
             if (amtField) amt = parseInt(amtField.get('current'));
-            else log('amtField not valid!');
+            else log(denom + ' field not found!');
         }
         return amt;
     },
@@ -1129,16 +1134,18 @@ var PurseStrings = PurseStrings || (function () {
     },
 
     validateDenomination = function (char_id, denom) {
+        var denom_name = denom.toUpperCase();
+        // We use a quantity of 666 to avoid the 0=false conundrum when creating new attributes
         if (isShapedSheet()) {
-            var row_id = findDenomID(char_id, denom);
             var currency = [
-                {name: 'Copper', acronym: 'CP', value: 0.001, weight: 0.02, border: 'COPPER', weight_system: 'POUNDS', quantity: 0},
-                {name: 'Silver', acronym: 'SP', value: 0.01, weight: 0.02, border: 'SILVER', weight_system: 'POUNDS', quantity: 0},
-                {name: 'Electrum', acronym: 'EP', value: 0.5, weight: 0.02, border: 'ELECTRUM', weight_system: 'POUNDS', quantity: 0},
-                {name: 'Gold', acronym: 'GP', value: 1, weight: 0.02, border: 'GOLD', weight_system: 'POUNDS', quantity: 0},
-                {name: 'Platinum', acronym: 'PP', value: 10, weight: 0.02, border: 'PLATINUM', weight_system: 'POUNDS', quantity: 0}
+                {name: 'Copper', acronym: 'CP', value: 0.001, weight: 0.02, border: 'COPPER', weight_system: 'POUNDS', quantity: '666'},
+                {name: 'Silver', acronym: 'SP', value: 0.01, weight: 0.02, border: 'SILVER', weight_system: 'POUNDS', quantity: '666'},
+                {name: 'Electrum', acronym: 'EP', value: 0.5, weight: 0.02, border: 'ELECTRUM', weight_system: 'POUNDS', quantity: '666'},
+                {name: 'Gold', acronym: 'GP', value: 1, weight: 0.02, border: 'GOLD', weight_system: 'POUNDS', quantity: '666'},
+                {name: 'Platinum', acronym: 'PP', value: 10, weight: 0.02, border: 'PLATINUM', weight_system: 'POUNDS', quantity: '666'}
             ]
 
+            var row_id = findDenomID(char_id, denom);
             if (row_id == '') {
                 // Create denomination if not found
                 var tmpDenom = _.find(currency, function (cur) { return cur.acronym == denom.toUpperCase(); });
@@ -1149,34 +1156,25 @@ var PurseStrings = PurseStrings || (function () {
                     data[repString + '_' + field] = tmpDenom[field];
                 });
                 setAttrs(char_id, data);
-            } else {
-                // New characters won't have a quantity yet for established denominations
-                var quant_id = findDenomQuantID(char_id, denom);
-                if (quant_id == '') {
-                    var curr_field = createObj("attribute", {characterid: char_id, name: 'repeating_currency_' + row_id + '_quantity', current: 0});
-                }
             }
-        } else {
-            var curr_field = findObjs({ type: 'attribute', characterid: char_id, name: denom })[0];
-            if (!curr_field) curr_field = createObj("attribute", {characterid: char_id, name: denom, current: 0});
+            // Set name to repeating field with new ID
+            denom_name = 'repeating_currency_' + row_id + '_quantity';
         }
+
+        // Double check to make sure our quantity field exists
+        var curr_field = findObjs({ type: 'attribute', characterid: char_id, name: denom_name }, {caseInsensitive: true})[0];
+        if (!curr_field) curr_field = createObj("attribute", {characterid: char_id, name: denom_name, current: '666'});
+
+        // Verify we have a quantity and zero out our 666 quantity
+        var curr_amt = getAttrByName(char_id, denom_name, 'current');
+        if (curr_amt == '666') curr_field.setWithWorker({ current: '0' });
     },
 
     findDenomID = function (char_id, denom) {
         var row_id = '', re = new RegExp('^repeating_currency_[^_]+_acronym$', 'i');
         var items = _.filter(findObjs({type: 'attribute', characterid: char_id}), function (x) { return x.get('name').match(re) !== null; });
-        var row = _.find(items, function (item) { return item.get('current').toLowerCase() == denom; });
+        var row = _.find(items, function (item) { return item.get('current').toString().toLowerCase() == denom.toLowerCase(); });
         if (row) row_id = row.get('name').split('_')[2];
-        return row_id;
-    },
-
-    findDenomQuantID = function (char_id, denom) {
-        var row_id = '', denom_id = findDenomID(char_id, denom);
-        if (denom_id != '') {
-            var re = new RegExp('^repeating_currency_' + denom_id + '_quantity$', 'i');
-            var item = _.find(findObjs({type: 'attribute', characterid: char_id}), function (x) { return x.get('name').match(re) !== null; });
-            if (item) row_id = item.get('name').split('_')[2];
-        }
         return row_id;
     },
 
@@ -1288,17 +1286,16 @@ var PurseStrings = PurseStrings || (function () {
         var sheet = msg.replace('!ps --sheet', '').trim().toLowerCase();
         if (sheet == '') state['PURSESTRINGS'].sheet = detectSheet();
         else if (sheet.includes('shaped')) state['PURSESTRINGS'].sheet = '5e Shaped';
-        else if (sheet.includes('by roll20') || sheet.includes('ogl')) state['PURSESTRINGS'].sheet = '5th Edition OGL';
-        else state['PURSESTRINGS'].sheet = 'Unknown Sheet';
-        adminDialog('Complete', 'Sheet set to "' + state['PURSESTRINGS'].sheet + '"');
+        else state['PURSESTRINGS'].sheet = '5th Edition OGL';
+        adminDialog('Sheet Set', 'Character sheet has been set to "' + state['PURSESTRINGS'].sheet + '".');
+        commandConfig(msg);
     },
 
     detectSheet = function () {
-        var sheet = '5th Edition OGL', chars = findObjs({type: 'character'});
-        var char = _.find(chars, function (c) {return c.get('controlledby') !== '' && c.get('controlledby') !== 'all'; });
+        var sheet = '5th Edition OGL', char = findObjs({type: 'character'})[0];
         if (char) {
             var charAttrs = findObjs({type: 'attribute', characterid: char.get('id')}, {caseInsensitive: true});
-            if (_.find(charAttrs, function (x) { return x.get('name') == 'character_sheet' && x.get('current').search('Shaped') != -1; })) sheet = '5e Shaped';
+            if (_.find(charAttrs, function (x) { return x.get('name') == 'character_sheet' && x.get('current').startsWith('Shaped'); })) sheet = '5e Shaped';
         }
         return sheet;
     },

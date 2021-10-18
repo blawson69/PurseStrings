@@ -133,8 +133,8 @@ var PurseStrings = PurseStrings || (function () {
                         if (addShowPurse(char_id)) {
                             message += ' A "ShowPurse" action was added to enable viewing of their Purse by the controlling player.';
                         }
-                        if (isMerchant()) {
-                            if (addShowInventory(token.get('id'))) {
+                        if (isMerchant(token.get('id'))) {
+                            if (addShowInventory(char_id)) {
                                 message += '<br>A "ShowInventory" action was also added to this Merchant.';
                             }
                         }

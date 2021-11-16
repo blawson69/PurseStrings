@@ -830,7 +830,7 @@ var PurseStrings = PurseStrings || (function () {
                 var d_id = findDenomID(char_id, denom);
                 if (d_id != '') ids.push(d_id);
             } else {
-                var what = getAttrByName(char_id, denom, 'current');
+                var what = getAttrByName(char_id, denom.toLowerCase(), 'current');
                 ids.push(what);
             }
         });
@@ -1106,13 +1106,8 @@ var PurseStrings = PurseStrings || (function () {
     getDenomAmt = function (char_id, denom) {
         var amt = 0, char = getObj('character', char_id);
         if (char) {
-            var amtField, denom = denom.toLowerCase();
-            if (isShapedSheet()) {
-                var denom_id = findDenomID(char_id, denom);
-                amtField = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + denom_id + '_quantity' })[0];
-            } else {
-                amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom }, {caseInsensitive: true})[0];
-            }
+            var denom_id = isShapedSheet() ? 'repeating_currency_' + findDenomID(char_id, denom) + '_quantity' : denom.toLowerCase();
+            var amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom_id }, {caseInsensitive: true})[0];
             if (amtField) amt = parseInt(amtField.get('current'));
             else log(denom + ' field not found!');
         }
@@ -1122,13 +1117,8 @@ var PurseStrings = PurseStrings || (function () {
     changeDenomAmt = function (char_id, denom, amt) {
         var char = getObj('character', char_id);
         if (char) {
-            var amtField, denom = denom.toLowerCase();
-            if (isShapedSheet()) {
-                var denom_id = findDenomID(char_id, denom);
-                amtField = findObjs({ type: 'attribute', characterid: char_id, name: 'repeating_currency_' + denom_id + '_quantity' })[0];
-            } else {
-                amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom })[0];
-            }
+            var denom_id = isShapedSheet() ? 'repeating_currency_' + findDenomID(char_id, denom) + '_quantity' : denom.toLowerCase();
+            var amtField = findObjs({ type: 'attribute', characterid: char_id, name: denom_id }, {caseInsensitive: true})[0];
             if (amtField) amtField.setWithWorker({ current: amt });
         } //if char
     },

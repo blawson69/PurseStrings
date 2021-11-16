@@ -2,7 +2,7 @@
 > **Changes in version 6.0:**
 >  1. Removed PotionManager and GearManager integration, replacing those scripts with  [ItemDB](https://github.com/blawson69/ItemDB) for adding purchased items to character sheets.
 >  2. Added [conversion function](#--convert) to enable consolidation of coins into higher denominations.
-> 3. Updated sheet detection to allow manual setting of the sheet in cases where character sheets may contain conflicting attributes. If script output in chat is empty, use `!ps --sheet` to detect the sheet from a current PC character, or `!ps --sheet <sheet_name>` to manually tell the script which sheet you are using.
+> 3. Updated sheet detection to allow manual setting of the sheet in cases where character sheets may contain conflicting attributes. If script output in chat is empty, use `!ps --sheet` to detect the sheet from a current PC character.
 
 This [Roll20](http://roll20.net/) script handles currency and currency exchanges for characters in games using the default [SRD monetary system](https://roll20.net/compendium/dnd5e/Treasure#content). It manages a character's currency and will add/subtract appropriately when collecting loot, paying for goods/services, etc. This script also includes an Inventory system, allowing a dynamic Merchant experience. You can create any number of Merchant NPCs with an Inventory that is updated with every purchase.
 
@@ -101,7 +101,7 @@ When a merchant's inventory is displayed, you can choose to whether or not to sh
 
 You can also override this value individually on each Merchant token. To do so, simply add "show-stock" or "hide-stock" to the first Bar 1 box on the token.
 
- Default is to show quantities.
+Default is to show quantities.
 
 #### Recording Purchases
 When a player character purchases an item from a Merchant, PurseStrings can record the purchase to the character's sheet for later reference. For the 5e Shaped sheet, it is recorded in the Miscellaneous Notes field near the bottom. For the 5th Edition OGL sheet, it is recorded in the Treasure field in the Bio tab. This applies only to Inventory items that do not have an infinite availability.

@@ -174,7 +174,7 @@ Equivalences are used when determining what coins are removed. For instance, if 
 
 ---
 ### --convert
-**GM Only** When a character has a large number of small denomination coins in their Purse, they may want to convert them into larger denominations to save space and weight. The GM can select a character's token and send the `--convert` command along with the acronym for the denomination you with to convert to:
+**GM Only** When a character has a large number of small denomination coins in their Purse, they may want to convert them into larger denominations to save space and weight. The GM can select a character's token and send the `--convert` command along with the acronym for the denomination you wish to convert to:
 
 `!ps --convert gp`
 

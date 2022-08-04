@@ -111,7 +111,7 @@ The script will add a line beginning with "PURCHASED ITEMS:" followed by a list 
 The default is to record purchases.
 
 #### Script Integration
-For users of the 5e Shaped Sheet, PurseStrings will detect the presence of the [ItemDB](https://github.com/blawson69/ItemDB) script and can optionally add purchased items to the buyer's character sheet according to that script's configuration. You can enable/disable this behavior is in the [config](#--config) dialog if you have Recording Purchases turned on.
+PurseStrings will detect the presence of the [ItemDB](https://github.com/blawson69/ItemDB) script and can optionally add purchased items to the buyer's character sheet according to that script's configuration. You can enable/disable this behavior is in the [config](#--config) dialog if you have Recording Purchases turned on.
 
 The default is enabled.
 

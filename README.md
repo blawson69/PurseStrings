@@ -121,6 +121,8 @@ The default is enabled.
 
 `!ps --setup`
 
+> **IMPORTANT!** Any character sheet that does not have values in each of the currency fields **will break the script.** The `!ps --setup` command is specifically created to enable the core functionality of the PurseStrings script.
+
 If you wish to add a starting amount to the selected characters, you can optionally pass the coinage parameter along with the `--setup` command. Keep in mind the given amount will be added to every selected character. The following adds 50cp, 20sp, and 10gp to each selected character:
 
 `!ps --setup 50:20:0:10:0`

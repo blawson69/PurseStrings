@@ -48,7 +48,7 @@ Sword Sharpening|2gp|
 Armor Polishing|5gp|
 Weapons
 Dagger|2gp|5
-Hand Axe|5gp|3
+Handaxe|5gp|3
 Shortsword|10gp|1
 Adventuring Gear
 Potion of Healing|50gp|4
